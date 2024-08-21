@@ -9,7 +9,7 @@ export default function Home() {
       <div className="max-w-[519px] mx-2">
         <Image src={image} alt="SplitEase logo" width={200} height={200} />
         <h1 className="text-4xl font-semibold my-6 max-w-[500px]">
-          Manage your <span className="font-extrabold">Expenses</span>with ease
+          Manage your <span className="font-extrabold">Expenses</span> with ease
         </h1>
         <p className="text-2xl font-medium max-w-[600px]">
           Use SplitEase to easily track your expenses and Split them among

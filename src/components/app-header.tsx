@@ -56,7 +56,7 @@ export default function AppHeader() {
               href={"/app/account"}
               className="text-xl mb-2 flex justify-center items-center gap-x-1"
             >
-              <div className="flex w-8 h-8 bg-accountcolor rounded-full text-white text-sm justify-center items-center">
+              <div className="flex w-7 h-7 bg-accountcolor rounded-full text-white text-sm justify-center items-center">
                 NK
               </div>
               Account

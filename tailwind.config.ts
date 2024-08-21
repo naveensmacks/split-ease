@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primecolor: "#5DC9A8",
+        primecolor: "#2C9676",
         secondcolor: "#f5f5f5",
-        accountcolor: "#EE6071",
+        accountcolor: "#d15867",
       },
     },
   },

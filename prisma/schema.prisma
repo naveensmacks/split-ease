@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// prisma/schema.prisma
+
+model User {
+  userId          String    @id @default(uuid())
+  email           String    @unique
+  hashedPassword  String
+  firstName       String
+  lastName        String
+  groups          Group[]   @relation("UserGroups")
+  shares          Share[]
+  balancesOwed    Balance[] @relation("BalanceOwedBy")
+  balancesTo      Balance[] @relation("BalanceOwedTo")
+  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+  Group           Group[]
+  expensesAddedBy Expense[] @relation("AddedByUser")
+  expensesPaidBy  Expense[] @relation("PaidByUser")
+}
+
+model Group {
+  groupId          String       @id @default(uuid())
+  groupName        String
+  groupDescription String?
+  totalExpense     Float?
+  currencyType     CurrencyType
+  splitEase        Boolean
+  users            User[]       @relation("UserGroups")
+  expenses         Expense[]
+  balances         Balance[]
+  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime     @default(now())
+  createdByUserId  String
+  createdBy        User         @relation(fields: [createdByUserId], references: [userId])
+}
+
+model Expense {
+  expenseId          String      @id @default(uuid())
+  groupId            String
+  expenseType        ExpenseType
+  paidById           String
+  addedById          String
+  expenseDescription String?
+  amount             Decimal
+  expenseDate        DateTime
+  splitBy            SplitBy
+  group              Group       @relation(fields: [groupId], references: [groupId])
+  paidByUser         User        @relation("PaidByUser", fields: [paidById], references: [userId])
+  addedByUser        User        @relation("AddedByUser", fields: [addedById], references: [userId])
+  shares             Share[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model Share {
+  shareId    String  @id @default(uuid())
+  expenseId  String
+  share      Int?
+  paidToId   String
+  amount     Decimal
+  expense    Expense @relation(fields: [expenseId], references: [expenseId])
+  paidToUser User    @relation(fields: [paidToId], references: [userId])
+}
+
+model Balance {
+  balanceId  String  @id @default(uuid())
+  groupId    String
+  owedToId   String
+  owedById   String
+  amount     Decimal
+  settled    Boolean
+  group      Group   @relation(fields: [groupId], references: [groupId])
+  owedToUser User    @relation("BalanceOwedTo", fields: [owedToId], references: [userId])
+  owedByUser User    @relation("BalanceOwedBy", fields: [owedById], references: [userId])
+}
+
+enum CurrencyType {
+  USD
+  INR
+}
+
+enum ExpenseType {
+  FOOD
+  PETROL
+  SNACKS
+  DRINKS
+  GROCERIES
+  RENT
+  UTILITIES
+  MOVIE
+  OTHER
+}
+
+enum SplitBy {
+  EQUAL
+  UNEQUAL
+  SHARES
+}
