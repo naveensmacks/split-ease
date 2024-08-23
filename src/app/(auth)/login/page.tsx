@@ -1,9 +1,10 @@
 import AuthForm from "@/components/auth-form";
 import H1 from "@/components/h1";
+import { sleep } from "@/lib/utils";
 
 import Link from "next/link";
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
   searchParams: { [key: string]: string };

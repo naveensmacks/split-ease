@@ -1,5 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import currency from "./currency.json";
 
 const prisma = new PrismaClient();
 const clearOldData = false;
@@ -53,6 +54,7 @@ async function main() {
 
   console.log(`Start seeding ...`);
 
+  console.log(`Inserting Users ...`);
   // Hash passwords and create users
   let i = 1;
   for (const user of usersData) {
@@ -78,6 +80,11 @@ async function main() {
   const user5 = await prisma.user.findUnique({
     where: { email: "user5@example.com" },
   });
+  console.log(`Users Created...`);
+
+  const currencies = await seedCurrrency();
+  //get INR  from currencies
+  const INR = currencies.find((currency) => currency.code == "INR");
 
   // Sample groups and expenses data with shares
   const groupsData: Prisma.GroupCreateInput[] = [
@@ -85,7 +92,7 @@ async function main() {
       groupName: "Trip to Paris",
       groupDescription: "Expenses for the Paris trip",
       totalExpense: 5000,
-      currencyType: "INR",
+      currency: { connect: { code: INR!.code } },
       splitEase: true,
       createdBy: { connect: { userId: user1!.userId } },
       users: {
@@ -161,7 +168,7 @@ async function main() {
       groupName: "Office Party",
       groupDescription: "Monthly office party expenses",
       totalExpense: 5000,
-      currencyType: "INR",
+      currency: { connect: { code: INR!.code } },
       splitEase: true,
       createdBy: { connect: { userId: user2!.userId } },
       users: {
@@ -237,7 +244,7 @@ async function main() {
       groupName: "Family Reunion",
       groupDescription: "Expenses for the family gathering",
       totalExpense: 500,
-      currencyType: "INR",
+      currency: { connect: { code: INR!.code } },
       splitEase: true,
       createdBy: { connect: { userId: user4!.userId } },
       users: {
@@ -273,7 +280,7 @@ async function main() {
       groupName: "Beach Vacation",
       groupDescription: "Expenses for the beach vacation",
       totalExpense: 1750,
-      currencyType: "USD",
+      currency: { connect: { code: INR!.code } },
       splitEase: true,
       createdBy: { connect: { userId: user5!.userId } },
       users: {
@@ -357,3 +364,19 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+async function seedCurrrency() {
+  console.log("Start seeding currencies...");
+
+  for (const [code, name] of Object.entries(currency)) {
+    await prisma.currency.create({
+      data: {
+        code,
+        name,
+      },
+    });
+  }
+  //get all currencies
+  const currencies = await prisma.currency.findMany();
+  console.log("Currency seeding finished.");
+  return currencies;
+}

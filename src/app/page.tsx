@@ -16,10 +16,10 @@ export default function Home() {
           friends with ease.
         </p>
         <div className="mt-10 space-x-3">
-          <Button asChild>
+          <Button className="state-effects" asChild>
             <Link href="/signup">Get Started</Link>
           </Button>
-          <Button variant="secondary" asChild>
+          <Button variant="secondary" className="state-effects" asChild>
             <Link href="/login">Login</Link>
           </Button>
         </div>

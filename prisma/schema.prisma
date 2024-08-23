@@ -27,25 +27,26 @@ model User {
   balancesTo      Balance[] @relation("BalanceOwedTo")
   updatedAt       DateTime  @updatedAt
   createdAt       DateTime  @default(now())
-  Group           Group[]
+  groupsCreatedBy Group[]
   expensesAddedBy Expense[] @relation("AddedByUser")
   expensesPaidBy  Expense[] @relation("PaidByUser")
 }
 
 model Group {
-  groupId          String       @id @default(uuid())
+  groupId          String    @id @default(uuid())
   groupName        String
   groupDescription String?
   totalExpense     Float?
-  currencyType     CurrencyType
+  currencyType     String
+  currency         Currency  @relation(fields: [currencyType], references: [code])
   splitEase        Boolean
-  users            User[]       @relation("UserGroups")
+  users            User[]    @relation("UserGroups")
   expenses         Expense[]
   balances         Balance[]
-  updatedAt        DateTime     @updatedAt
-  createdAt        DateTime     @default(now())
+  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
   createdByUserId  String
-  createdBy        User         @relation(fields: [createdByUserId], references: [userId])
+  createdBy        User      @relation(fields: [createdByUserId], references: [userId])
 }
 
 model Expense {
@@ -88,9 +89,10 @@ model Balance {
   owedByUser User    @relation("BalanceOwedBy", fields: [owedById], references: [userId])
 }
 
-enum CurrencyType {
-  USD
-  INR
+model Currency {
+  code  String  @id @unique
+  name  String
+  Group Group[]
 }
 
 enum ExpenseType {

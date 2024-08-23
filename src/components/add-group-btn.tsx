@@ -5,7 +5,10 @@ import Link from "next/link";
 
 export default function AddGroupButton() {
   return (
-    <Button className="h-9 w-9 px-0 py-0 sm:px-4 sm:w-fit sm:py-2" asChild>
+    <Button
+      className="h-9 w-9 px-0 py-0 sm:px-4 sm:w-fit sm:py-2 state-effects"
+      asChild
+    >
       <Link href="/app/groups/create">
         <PlusIcon className="w-6 h-6 sm:hidden block" />
         <span className="hidden sm:block">Add Group</span>
