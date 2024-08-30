@@ -17,8 +17,21 @@ import { toast } from "sonner";
 
 type GroupFormProps = {
   currencylist: { value: string; label: string }[];
+  groupId?: string;
+  type: "create" | "edit";
 };
-export default function GroupForm({ currencylist }: GroupFormProps) {
+export default function GroupForm({
+  currencylist,
+  groupId,
+  type,
+}: GroupFormProps) {
+  const isEditing = type === "edit";
+
+  let groupInfo;
+  if (isEditing && groupId) {
+    const { getGroupFromList } = useGroupContext();
+    groupInfo = getGroupFromList(groupId);
+  }
   const {
     register,
     trigger,
@@ -31,10 +44,19 @@ export default function GroupForm({ currencylist }: GroupFormProps) {
     setValue,
   } = useForm<TGroupForm>({
     resolver: zodResolver(groupFormSchema),
-    defaultValues: {
-      splitEase: true,
-      currencyType: "US Dollar - USD",
-    },
+    defaultValues: isEditing
+      ? {
+          groupName: groupInfo?.groupName,
+          groupDescription: groupInfo?.groupDescription
+            ? groupInfo?.groupDescription
+            : undefined,
+          currencyType: groupInfo?.currencyType,
+          splitEase: groupInfo?.splitEase,
+        }
+      : {
+          splitEase: true,
+          currencyType: "US Dollar - USD",
+        },
   });
   const { handleAddGroup } = useGroupContext();
   const router = useRouter();
@@ -48,7 +70,11 @@ export default function GroupForm({ currencylist }: GroupFormProps) {
     console.log("isSubmitting: ", isSubmitting);
     if (actionData.isSuccess && actionData.data) {
       router.push(`/app/groups/create/${actionData.data.groupId}`);
-      toast.success("Group created successfully");
+      toast.success(
+        isEditing
+          ? "Group Info updated successfully"
+          : "Group created successfully"
+      );
     } else if (!actionData.isSuccess) {
       if (actionData.fieldErrors) {
         setServerFieldErrors(actionData.fieldErrors, setError);
@@ -139,7 +165,7 @@ export default function GroupForm({ currencylist }: GroupFormProps) {
                 className="min-w-56 max-w-96 bg-opacity-85 rounded-md state-effects"
                 disabled={isSubmitting}
               >
-                Create group
+                {isEditing ? "Update group" : "Create group"}
               </Button>
             </div>
           </>

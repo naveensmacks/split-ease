@@ -3,7 +3,12 @@ import H1 from "@/components/h1";
 import { getlistOfCurrencies } from "@/lib/server-utils";
 import React from "react";
 
-export default async function page() {
+type EditGroupInfoProps = {
+  params: { slug: string };
+};
+
+export default async function EditGroupInfo({ params }: EditGroupInfoProps) {
+  const slug = params.slug;
   const currencies = await getlistOfCurrencies();
   const currencylist = currencies.map((item) => {
     return { value: item.code, label: item.name + " - " + item.code };
@@ -12,9 +17,9 @@ export default async function page() {
   return (
     <>
       <div className="px-4 py-2 flex justify-between items-center">
-        <H1 className="sm:my-2 text-xl sm:text-2xl">Create a new group </H1>
+        <H1 className="sm:my-2 text-xl sm:text-2xl">Edit group info </H1>
       </div>
-      <GroupForm currencylist={currencylist} type="create" />
+      <GroupForm currencylist={currencylist} groupId={slug} type="edit" />
     </>
   );
 }

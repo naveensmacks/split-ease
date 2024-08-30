@@ -31,7 +31,7 @@ export default function GroupContextProvider({
   userId,
   children,
 }: GroupContextProviderProps) {
-  const [groupList, setGroupList] = useState<GroupWithRelations[] | null>(data);
+  const [groupList, setGroupList] = useState<GroupWithRelations[]>(data);
   //const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   //derived state
@@ -43,8 +43,6 @@ export default function GroupContextProvider({
   // ) => {
   //   setSelectedGroupId(groupId);
   // };
-
-  console.log("groupList: ", groupList);
 
   const handleAddGroup = async (newGroup: GroupEssential) => {
     //await sleep(1000);

@@ -19,9 +19,13 @@ export default async function Layout({
     <Container>
       <div className="flex flex-col min-h-screen">
         <AppHeader />
-        <GroupContextProvider data={groups ? groups : []} userId={userId}>
-          {children}
-        </GroupContextProvider>
+        <main className="flex flex-grow flex-col">
+          <div className="max-w-[920px] h-full w-full sm:p-3 mx-auto">
+            <GroupContextProvider data={groups ? groups : []} userId={userId}>
+              {children}
+            </GroupContextProvider>
+          </div>
+        </main>
         <SpaceCreatorDiv />
         <AppFooter />
       </div>
