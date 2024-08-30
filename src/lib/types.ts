@@ -9,3 +9,8 @@ export type GroupWithRelations = Group & {
   users: User[];
   expenses: Expense[];
 };
+
+export type MemberEssential = Omit<
+  User,
+  "hashedPassword" | "updatedAt" | "createdAt"
+>;

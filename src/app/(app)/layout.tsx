@@ -4,6 +4,7 @@ import AppHeader from "@/components/app-header";
 import { Toaster } from "@/components/ui/sonner";
 import GroupContextProvider from "@/contexts/group-context-provider";
 import { getGroupsByUserId, getUserByEmail } from "@/lib/server-utils";
+import SpaceCreatorDiv from "@/components/space-creater-div";
 
 export default async function Layout({
   children,
@@ -21,6 +22,7 @@ export default async function Layout({
         <GroupContextProvider data={groups ? groups : []} userId={userId}>
           {children}
         </GroupContextProvider>
+        <SpaceCreatorDiv />
         <AppFooter />
       </div>
       <Toaster position="top-right" />

@@ -12,9 +12,10 @@ const config: Config = {
         primecolor: "#2C9676",
         secondcolor: "#f5f5f5",
         accountcolor: "#d15867",
+        black: "#2B2B2B",
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/line-clamp")],
 };
 export default config;

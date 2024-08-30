@@ -17,10 +17,11 @@ datasource db {
 
 model User {
   userId          String    @id @default(uuid())
-  email           String    @unique
-  hashedPassword  String
+  email           String?   @unique
+  hashedPassword  String?
   firstName       String
-  lastName        String
+  lastName        String?
+  isRegistered    Boolean   @default(true)
   groups          Group[]   @relation("UserGroups")
   shares          Share[]
   balancesOwed    Balance[] @relation("BalanceOwedBy")

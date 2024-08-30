@@ -1,3 +1,4 @@
+import { User } from "@prisma/client";
 import { z } from "zod";
 export const groupFormSchema = z.object({
   groupName: z
@@ -22,3 +23,52 @@ export const groupFormSchema = z.object({
 });
 
 export type TGroupForm = z.infer<typeof groupFormSchema>;
+
+export const memberFormSchema = z
+  .object({
+    firstName: z
+      .string()
+      .trim()
+      .min(1, "First name is required")
+      .max(100, "First name cannot exceed 100 characters"),
+    lastName: z
+      .string()
+      .trim()
+      .max(100, "Last name cannot exceed 100 characters")
+      .nullable()
+      .optional(),
+    email: z
+      .union([
+        z
+          .string()
+          .max(100, { message: "Email can't be longer than 100 characters" })
+          .email({ message: "Please enter a valid email address" }),
+        z.literal(""),
+      ])
+      .nullable()
+      .optional(),
+    isRegistered: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      // If isRegistered is true, email should not be null or undefined
+      console.log("data.isRegistered: ", data.isRegistered);
+      if (data.isRegistered) {
+        return data.email ? true : false;
+      }
+      return true; // Otherwise, it's optional
+    },
+    {
+      path: ["email"], // Attach this error to the email field
+      message: "Email is required when the user is registered.",
+    }
+  )
+  .transform((data) => {
+    if (!data.isRegistered && data.email) {
+      // If isRegistered is false, email should be null or undefined
+      return { ...data, email: null };
+    }
+    return { ...data, email: data.email?.toLowerCase() };
+  });
+
+export type TMemberForm = z.infer<typeof memberFormSchema>;

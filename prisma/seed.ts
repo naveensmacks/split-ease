@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import currency from "./currency.json";
 
 const prisma = new PrismaClient();
-const clearOldData = false;
+const clearOldData = true;
 
 // Sample users data
 const usersData: Prisma.UserCreateInput[] = [
@@ -12,30 +12,35 @@ const usersData: Prisma.UserCreateInput[] = [
     hashedPassword: "",
     firstName: "John",
     lastName: "Doe",
+    isRegistered: true,
   },
   {
     email: "user2@example.com",
     hashedPassword: "",
     firstName: "Jane",
     lastName: "Smith",
+    isRegistered: true,
   },
   {
     email: "user3@example.com",
     hashedPassword: "",
     firstName: "Alice",
     lastName: "Brown",
+    isRegistered: true,
   },
   {
     email: "user4@example.com",
     hashedPassword: "",
     firstName: "Bob",
     lastName: "Davis",
+    isRegistered: true,
   },
   {
     email: "user5@example.com",
     hashedPassword: "",
     firstName: "Charlie",
     lastName: "Wilson",
+    isRegistered: true,
   },
 ];
 
@@ -47,6 +52,7 @@ async function main() {
     await prisma.share.deleteMany();
     await prisma.expense.deleteMany();
     await prisma.group.deleteMany();
+    await prisma.currency.deleteMany();
     await prisma.user.deleteMany();
 
     console.log(`Old data cleared.`);

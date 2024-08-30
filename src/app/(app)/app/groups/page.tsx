@@ -1,6 +1,7 @@
 import AddGroupButton from "@/components/add-group-btn";
 import GroupList from "@/components/group-list";
 import H1 from "@/components/h1";
+import SpaceCreatorDiv from "@/components/space-creater-div";
 
 export default async function Page({
   searchParams,
@@ -16,7 +17,6 @@ export default async function Page({
         </div>
         <GroupList />
       </div>
-      <div className="h-10 sm:h-0"></div>
     </main>
   );
 }

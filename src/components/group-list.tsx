@@ -3,11 +3,11 @@ import { useGroupContext } from "@/lib/hooks";
 import React from "react";
 
 export default function GroupList() {
-  const { group } = useGroupContext();
-  console.log("group: ", group);
+  const { groupList } = useGroupContext();
+  console.log("group: ", groupList);
   return (
     <>
-      {group?.map((group) => (
+      {groupList?.map((group) => (
         <div
           key={group.groupId}
           className="flex flex-col bg-white sm:rounded-lg px-5 py-4 sm:my-2 border-b border-black/10"
