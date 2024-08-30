@@ -8,7 +8,7 @@ import { memberFormSchema, TMemberForm } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useMemberContext } from "@/lib/hooks";
-import { setServerFieldErrors } from "@/lib/utils";
+import { cn, setServerFieldErrors } from "@/lib/utils";
 import { toast } from "sonner";
 
 type MemberFormProps = {
@@ -59,10 +59,10 @@ export default function MemberForm({ groupId }: MemberFormProps) {
   };
   return (
     <form
-      className="relative flex flex-col bg-white rounded-md sm:rounded-lg px-5 py-4 sm:my-2 border-b border-black/10 min-h-40"
+      className="relative flex flex-col gap-y-5 bg-white rounded-md sm:rounded-lg px-5 py-4 border-b border-black/10 min-h-40"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="my-3">
+      <div>
         <Input
           id="firstName"
           {...register("firstName")}
@@ -72,7 +72,7 @@ export default function MemberForm({ groupId }: MemberFormProps) {
           <p className="text-red-500/85">{errors.firstName.message}</p>
         )}
       </div>
-      <div className="my-3">
+      <div>
         <Input
           id="lastName"
           {...register("lastName")}
@@ -82,7 +82,7 @@ export default function MemberForm({ groupId }: MemberFormProps) {
           <p className="text-red-500/85">{errors.lastName.message}</p>
         )}
       </div>
-      <div className="my-3 flex justify-left items-center gap-x-3">
+      <div className="flex justify-left items-center gap-x-3">
         <Label htmlFor="isRegistered" className="text-black">
           Is user registered in Split Ease?{" "}
         </Label>
@@ -102,15 +102,21 @@ export default function MemberForm({ groupId }: MemberFormProps) {
           <p className="text-red-500/85">{errors.isRegistered.message}</p>
         )}
       </div>
-      {isRegistered && (
-        <div className="my-3">
-          <Input id="email" {...register("email")} placeholder="Email" />
-          {errors.email && (
-            <p className="text-red-500/85">{errors.email.message}</p>
-          )}
-        </div>
-      )}
-      <div className="my-4 flex justify-center items-center">
+      <div
+        className={cn(
+          "flex flex-col transform-all duration-500 ease-in-out origin-top",
+          isRegistered
+            ? "scale-y-100 opacity-100  max-h-40"
+            : "scale-y-0 opacity-0 max-h-0"
+        )}
+      >
+        <Input id="email" {...register("email")} placeholder="Email" />
+        {errors.email && (
+          <p className="text-red-500/85">{errors.email.message}</p>
+        )}
+      </div>
+
+      <div className="flex justify-center items-center">
         <Button
           className="min-w-56 max-w-96 bg-opacity-85 rounded-md state-effects"
           disabled={isSubmitting}

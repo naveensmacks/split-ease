@@ -64,7 +64,7 @@ export const memberFormSchema = z
     }
   )
   .transform((data) => {
-    if (!data.isRegistered && data.email) {
+    if (!data.isRegistered) {
       // If isRegistered is false, email should be null or undefined
       return { ...data, email: null };
     }

@@ -17,7 +17,7 @@ export default function AppFooter() {
         </small>
       </footer>
 
-      <nav className="fixed bottom-0 w-full sm:hidden h-16 bg-white shadow-black shadow-2xl">
+      <nav className="fixed bottom-0 w-full sm:hidden h-12 bg-white shadow-black shadow-2xl">
         <ul className="flex justify-around items-center h-full gap-x-6 text-sm">
           <li
             key={"/app/groups"}

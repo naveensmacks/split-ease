@@ -1,48 +1,39 @@
 import { useGroupContext, useMemberContext } from "@/lib/hooks";
-import React from "react";
+import React, { useState } from "react";
 import H1 from "./h1";
-import { Pencil1Icon } from "@radix-ui/react-icons";
-import { Button } from "./ui/button";
-import Image from "next/image";
-import usersIcon from "../../public/users.svg";
+import { MinusIcon, PlusIcon } from "@radix-ui/react-icons";
+import { cn } from "@/lib/utils";
 
-type MemberListProps = {
-  groupId: string;
-};
-export default function MemberList({ groupId }: MemberListProps) {
+export default function MemberList() {
   const { memberList } = useMemberContext();
-  const { getGroupFromList } = useGroupContext();
-  const selectedGroup = getGroupFromList(groupId);
+  const [isMemberListVisible, setIsMemberListVisible] = useState(true);
+  const toggleMemberListVisibility = () => {
+    setIsMemberListVisible((prev) => !prev);
+  };
   return (
     <>
-      <div className="flex gap-6 rounded-lg  my-2 justify-between items-start sm:w-[600px]">
-        <div className="flex flex-col justify-center items-start w-4/5 gap-2">
-          <div className="flex gap-2 justify-between">
-            <Image
-              src={usersIcon}
-              alt={"Groups"}
-              className="w-8 h-8 sm:w-10 sm:h-10 opacity-80"
-            />
-            <H1 className="text-2xl sm:text-4xl truncate items-center">
-              {selectedGroup?.groupName}
-            </H1>
-          </div>
-          <div className="text-black/60 w-full line-clamp-2">
-            {selectedGroup?.groupDescription}
-          </div>
-        </div>
-        <div className="w-fit">
-          <Button className="state-effects opacity-90">
-            <Pencil1Icon />
-            <span className="ml-1 hidden sm:block">Edit</span>
-          </Button>
-        </div>
-      </div>
-
-      <H1 className="my-2 text-xl sm:text-2xl">
-        Group Members ({memberList?.length})
-      </H1>
-      <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-2 max-h-[300px] overflow-y-scroll rounded-md">
+      <button
+        onClick={toggleMemberListVisibility}
+        aria-label="Toggle Member List"
+        className="flex gap-2 items-center"
+      >
+        {isMemberListVisible ? (
+          <MinusIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+        ) : (
+          <PlusIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+        )}
+        <H1 className="sm:my-2 text-xl sm:text-2xl">
+          Group Members ({memberList?.length})
+        </H1>
+      </button>
+      <div
+        className={cn(
+          "grid grid-cols-1 sm:grid-cols-3 sm:gap-2  overflow-y-scroll rounded-md transition-all duration-500 ease-in-out",
+          isMemberListVisible
+            ? "max-h-[250px] opacity-100"
+            : "max-h-0 opacity-0"
+        )}
+      >
         {memberList?.map((member) => (
           <div
             key={member.userId}

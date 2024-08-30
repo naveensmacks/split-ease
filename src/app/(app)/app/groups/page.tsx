@@ -1,7 +1,6 @@
 import AddGroupButton from "@/components/add-group-btn";
 import GroupList from "@/components/group-list";
 import H1 from "@/components/h1";
-import SpaceCreatorDiv from "@/components/space-creater-div";
 
 export default async function Page({
   searchParams,
@@ -9,7 +8,7 @@ export default async function Page({
   searchParams: { [key: string]: string };
 }) {
   return (
-    <main className="flex flex-grow flex-col mb-4">
+    <main className="flex flex-grow flex-col">
       <div className="max-w-[920px] h-full w-full sm:p-3 mx-auto">
         <div className="px-4 pt-4 pb-2 flex justify-between items-center">
           <H1 className="sm:my-2 text-xl sm:text-2xl">Groups</H1>
