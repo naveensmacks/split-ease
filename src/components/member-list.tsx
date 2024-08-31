@@ -1,11 +1,11 @@
-import { useGroupContext, useMemberContext } from "@/lib/hooks";
+import { useGroupContext } from "@/lib/hooks";
 import React, { useState } from "react";
 import H1 from "./h1";
 import { MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
 export default function MemberList() {
-  const { memberList } = useMemberContext();
+  const { selectedGroupMemberList: memberList } = useGroupContext();
   const [isMemberListVisible, setIsMemberListVisible] = useState(true);
   const toggleMemberListVisibility = () => {
     setIsMemberListVisible((prev) => !prev);

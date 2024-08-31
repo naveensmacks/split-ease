@@ -58,16 +58,18 @@ export default function GroupForm({
           currencyType: "US Dollar - USD",
         },
   });
-  const { handleAddGroup } = useGroupContext();
+  const { handleAddGroup, handleEditGroup } = useGroupContext();
   const router = useRouter();
   const onSubmit = async () => {
-    console.log("isSubmitting: ", isSubmitting);
     const result = await trigger();
     if (!result) return;
     let groupData = getValues();
-    console.log("groupData: ", groupData);
-    const actionData = await handleAddGroup(groupData);
-    console.log("isSubmitting: ", isSubmitting);
+    let actionData;
+    if (isEditing) {
+      actionData = await handleEditGroup(groupData, groupId!);
+    } else {
+      actionData = await handleAddGroup(groupData);
+    }
     if (actionData.isSuccess && actionData.data) {
       router.push(`/app/groups/create/${actionData.data.groupId}`);
       toast.success(

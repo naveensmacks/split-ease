@@ -4,7 +4,7 @@ import MemberForm from "./member-form";
 import { cn } from "@/lib/utils";
 import H1 from "./h1";
 
-export default function AddMember({ groupId }: { groupId: string }) {
+export default function AddMember() {
   const [isAddMemberVisible, setIsAddMemberVisible] = useState(false);
 
   const toggleAddMemberVisibility = () => {
@@ -30,7 +30,7 @@ export default function AddMember({ groupId }: { groupId: string }) {
           isAddMemberVisible ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <MemberForm groupId={groupId} />
+        <MemberForm />
       </div>
     </>
   );

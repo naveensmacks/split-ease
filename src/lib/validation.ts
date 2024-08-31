@@ -52,7 +52,6 @@ export const memberFormSchema = z
   .refine(
     (data) => {
       // If isRegistered is true, email should not be null or undefined
-      console.log("data.isRegistered: ", data.isRegistered);
       if (data.isRegistered) {
         return data.email ? true : false;
       }

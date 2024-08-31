@@ -15,7 +15,6 @@ export async function addgroup(group: unknown, userId: string) {
   }
   //change currency type to code by taking only the last three letters
   const code = validatedGroup.data.currencyType.slice(-3);
-  console.log("code after slice: ", code);
 
   //remove  validatedGroup.data.currencyType from validatedGroup.data
   const { currencyType, ...data } = validatedGroup.data;
@@ -43,6 +42,47 @@ export async function addgroup(group: unknown, userId: string) {
     };
   }
 }
+
+export async function editGroup(
+  group: unknown,
+  groupId: string,
+  userId: string
+) {
+  const validatedGroup = groupFormSchema.safeParse(group);
+  if (!validatedGroup.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedGroup.error.flatten().fieldErrors,
+    };
+  }
+  //change currency type to code by taking only the last three letters
+  const code = validatedGroup.data.currencyType.slice(-3);
+
+  //remove  validatedGroup.data.currencyType from validatedGroup.data
+  const { currencyType, ...data } = validatedGroup.data;
+  try {
+    const group = await prisma.group.update({
+      where: { groupId: groupId },
+      data: {
+        ...data,
+        users: { connect: [{ userId: userId }] },
+        currency: { connect: { code: code } },
+      },
+      include: {
+        users: true,
+        expenses: true,
+      },
+    });
+    return { isSuccess: true, data: group };
+  } catch (error) {
+    console.log("error: ", error);
+    return {
+      isSuccess: false,
+      message: "Could not update group. Try again later.",
+    };
+  }
+}
+
 export async function addMemberToGroup(member: unknown, groupId: string) {
   const validatedMember = memberFormSchema.safeParse(member);
   if (!validatedMember.success) {
@@ -52,7 +92,6 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
     };
   }
   const newMember = validatedMember.data;
-  console.log("newMember: ", newMember);
 
   if (newMember.isRegistered && newMember.email) {
     //check if user is a registered user

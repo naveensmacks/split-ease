@@ -7,14 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { memberFormSchema, TMemberForm } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { useMemberContext } from "@/lib/hooks";
+import { useGroupContext } from "@/lib/hooks";
 import { cn, setServerFieldErrors } from "@/lib/utils";
 import { toast } from "sonner";
 
-type MemberFormProps = {
-  groupId: string;
-};
-export default function MemberForm({ groupId }: MemberFormProps) {
+export default function MemberForm() {
+  const { selectedGroupId } = useGroupContext();
   const {
     register,
     trigger,
@@ -35,7 +33,7 @@ export default function MemberForm({ groupId }: MemberFormProps) {
   //When both defaultValue(second argument in watch()) and defaultValues(of useForm) are supplied, defaultValue will be returned.
   //Watch the value of isRegistered
   const isRegistered = watch("isRegistered");
-  const { handleAddMember } = useMemberContext();
+  const { handleAddMember } = useGroupContext();
   const onSubmit = async () => {
     const result = await trigger();
     if (!result) {
@@ -43,18 +41,18 @@ export default function MemberForm({ groupId }: MemberFormProps) {
       return;
     }
     let memberData = getValues();
-    console.log("memberData1: ", memberData);
-    const actionData = await handleAddMember(memberData, groupId);
-    console.log("actionData : ", actionData);
-    if (!actionData.isSuccess) {
-      if (actionData.fieldErrors) {
-        setServerFieldErrors(actionData.fieldErrors, setError);
-      } else {
-        toast.error(actionData.message);
+    if (selectedGroupId) {
+      const actionData = await handleAddMember(memberData, selectedGroupId);
+      if (!actionData.isSuccess) {
+        if (actionData.fieldErrors) {
+          setServerFieldErrors(actionData.fieldErrors, setError);
+        } else {
+          toast.error(actionData.message);
+        }
+      } else if (actionData.isSuccess) {
+        reset();
+        toast.success("Member added successfully");
       }
-    } else if (actionData.isSuccess) {
-      reset();
-      toast.success("Member added successfully");
     }
   };
   return (

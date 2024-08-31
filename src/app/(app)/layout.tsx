@@ -14,7 +14,6 @@ export default async function Layout({
   const user = await getUserByEmail("user4@example.com");
   const userId = user!.userId;
   const groups = await getGroupsByUserId(userId);
-  console.log("group: ", groups);
   return (
     <Container>
       <div className="flex flex-col min-h-screen">

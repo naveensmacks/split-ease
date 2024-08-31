@@ -1,23 +1,29 @@
 "use client";
-import { addgroup } from "@/actions/actions";
+import { addgroup, addMemberToGroup, editGroup } from "@/actions/actions";
 import { GroupEssential, GroupWithRelations } from "@/lib/types";
 import { sleep } from "@/lib/utils";
-import { TGroupForm } from "@/lib/validation";
+import { TGroupForm, TMemberForm } from "@/lib/validation";
+import { Group, User } from "@prisma/client";
 import React, { createContext, useState } from "react";
 
 export const GroupContext = createContext<GroupContextType | null>(null);
 
 type GroupContextType = {
   groupList: GroupWithRelations[] | null;
-  handleEditGroupList: (
-    editedGroup: GroupWithRelations,
-    groupId: string
-  ) => void;
   getGroupFromList: (groupId: string) => GroupWithRelations | null;
-  // selectedGroup: GroupWithRelations | null;
-  // selectedGroupId: string | null;
-  // handleChangeSelectedGroupId: (groupId: string) => void;
+  selectedGroup: GroupWithRelations | null;
+  selectedGroupId: string | null;
+  handleChangeSelectedGroupId: (groupId: string) => void;
   handleAddGroup: (newGroup: TGroupForm) => ReturnType<typeof addgroup>;
+  handleEditGroup: (
+    editedGroup: TGroupForm,
+    groupId: string
+  ) => ReturnType<typeof editGroup>;
+  selectedGroupMemberList: User[];
+  handleAddMember: (
+    newMember: TMemberForm,
+    groupId: string
+  ) => ReturnType<typeof addMemberToGroup>;
 };
 
 type GroupContextProviderProps = {
@@ -32,28 +38,49 @@ export default function GroupContextProvider({
   children,
 }: GroupContextProviderProps) {
   const [groupList, setGroupList] = useState<GroupWithRelations[]>(data);
-  //const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   //derived state
-  // const selectedGroup =
-  //   groupList?.find((group) => group.groupId === selectedGroupId) || null;
+  const selectedGroup =
+    groupList?.find((group) => group.groupId === selectedGroupId) || null;
 
-  // const handleChangeSelectedGroupId = async (
-  //   groupId: GroupWithRelations["groupId"]
-  // ) => {
-  //   setSelectedGroupId(groupId);
-  // };
+  const selectedGroupMemberList =
+    selectedGroup && selectedGroup.users ? selectedGroup.users : [];
 
+  const handleChangeSelectedGroupId = async (
+    groupId: GroupWithRelations["groupId"]
+  ) => {
+    setSelectedGroupId(groupId);
+  };
+
+  //Group Form
   const handleAddGroup = async (newGroup: GroupEssential) => {
-    //await sleep(1000);
-    console.log("newGroup: ", newGroup, "userId: ", userId);
     const actionData = await addgroup(newGroup, userId);
-
-    console.log("actionData: ", actionData);
 
     if (actionData.isSuccess && actionData.data) {
       setGroupList((prev) =>
         prev ? [...prev, actionData.data] : [actionData.data]
+      );
+    }
+    return actionData;
+  };
+
+  const handleEditGroup = async (
+    updatedGroup: GroupEssential,
+    groupId: Group["groupId"]
+  ) => {
+    const actionData = await editGroup(updatedGroup, groupId, userId);
+
+    if (actionData.isSuccess && actionData.data) {
+      setGroupList((prev) =>
+        prev
+          ? prev.map((group) => {
+              if (group.groupId === groupId) {
+                return actionData.data;
+              }
+              return group;
+            })
+          : [actionData.data]
       );
     }
     return actionData;
@@ -70,21 +97,37 @@ export default function GroupContextProvider({
     setGroupList((prev) => {
       return prev
         ? [
+            editedGroup,
             //remove the group with group ID from the list
             ...prev.filter((group) => group.groupId !== groupId),
-            editedGroup,
           ]
         : [editedGroup];
     });
+  };
+
+  //Member Form
+  const handleAddMember = async (newMember: TMemberForm, groupId: string) => {
+    const actionData = await addMemberToGroup(newMember, groupId);
+
+    if (actionData && actionData.isSuccess && actionData.data) {
+      //setMemberList(actionData.data.users);
+      handleEditGroupList(actionData.data, groupId);
+    }
+    return actionData;
   };
 
   return (
     <GroupContext.Provider
       value={{
         groupList,
-        handleEditGroupList,
         getGroupFromList,
         handleAddGroup,
+        handleEditGroup,
+        selectedGroup,
+        selectedGroupId,
+        handleChangeSelectedGroupId,
+        selectedGroupMemberList,
+        handleAddMember,
       }}
     >
       {children}
