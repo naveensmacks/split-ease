@@ -1,3 +1,4 @@
+"use client";
 import { useGroupContext } from "@/lib/hooks";
 import React, { useState } from "react";
 import H1 from "./h1";

@@ -1,5 +1,6 @@
+"use client";
 import { MinusIcon, PlusIcon } from "@radix-ui/react-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import MemberForm from "./member-form";
 import { cn } from "@/lib/utils";
 import H1 from "./h1";

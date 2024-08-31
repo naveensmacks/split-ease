@@ -1,3 +1,4 @@
+"use client";
 import { Pencil1Icon } from "@radix-ui/react-icons";
 import { Button } from "./ui/button";
 import Image from "next/image";
