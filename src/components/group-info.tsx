@@ -12,7 +12,7 @@ export default function GroupInfo() {
   return (
     <div className="flex gap-6 rounded-lg  my-2 justify-between items-start sm:w-[600px]">
       <div className="flex flex-col justify-center items-start w-4/5 gap-2">
-        <div className="flex gap-2 justify-between">
+        <div className="flex gap-2 w-full">
           <Image
             src={usersIcon}
             alt={"Groups"}

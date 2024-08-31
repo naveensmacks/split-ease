@@ -12,7 +12,7 @@ export default function GroupList() {
             key={group.groupId}
             className="flex flex-col bg-white sm:rounded-lg py-2 sm:py-3  px-4 sm:my-2 border-b border-black/10"
           >
-            <div>{group.groupName}</div>
+            <div className="truncate">{group.groupName}</div>
             <div className="text-black/50">
               Balance: <span className="text-orange-400">-500</span>
             </div>
