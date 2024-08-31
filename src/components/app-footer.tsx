@@ -2,7 +2,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
 import { motion } from "framer-motion";
 import groupIcon from "../../public/groupIcon.svg";
 import Image from "next/image";

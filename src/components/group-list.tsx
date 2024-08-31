@@ -1,7 +1,6 @@
 "use client";
 import { useGroupContext } from "@/lib/hooks";
 import Link from "next/link";
-import React from "react";
 
 export default function GroupList() {
   const { groupList } = useGroupContext();

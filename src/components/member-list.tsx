@@ -1,6 +1,6 @@
 "use client";
 import { useGroupContext } from "@/lib/hooks";
-import React, { useState } from "react";
+import { useState } from "react";
 import H1 from "./h1";
 import { MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";

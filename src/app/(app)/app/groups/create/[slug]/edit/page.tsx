@@ -1,7 +1,6 @@
 import GroupForm from "@/components/group-form";
 import H1 from "@/components/h1";
 import { getlistOfCurrencies } from "@/lib/server-utils";
-import React from "react";
 
 type EditGroupInfoProps = {
   params: { slug: string };

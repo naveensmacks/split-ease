@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import Logo from "./logo";
 import H1 from "./h1";
 import { cn } from "@/lib/utils";

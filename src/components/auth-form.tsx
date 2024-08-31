@@ -1,10 +1,7 @@
 "use client";
-import React from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import AuthFormBtn from "./auth-form-btn";
-import { useFormState } from "react-dom";
-import { log } from "console";
 
 type AuthFormProps = {
   type: "login" | "signup";
