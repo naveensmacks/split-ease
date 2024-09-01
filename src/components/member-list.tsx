@@ -16,14 +16,14 @@ export default function MemberList() {
       <button
         onClick={toggleMemberListVisibility}
         aria-label="Toggle Member List"
-        className="flex gap-2 items-center"
+        className="flex gap-2 items-center text-white"
       >
         {isMemberListVisible ? (
           <MinusIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         ) : (
           <PlusIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         )}
-        <H1 className="sm:my-2 text-xl sm:text-2xl">
+        <H1 className="sm:my-2 text-xl sm:text-2xl text-white">
           Group Members ({memberList?.length})
         </H1>
       </button>

@@ -7,7 +7,7 @@ export default function GroupList() {
   return (
     <>
       {groupList?.map((group) => (
-        <Link href={`/app/groups/create/${group.groupId}`} key={group.groupId}>
+        <Link href={`/app/group/${group.groupId}/expenses`} key={group.groupId}>
           <div
             key={group.groupId}
             className="flex flex-col bg-white sm:rounded-lg py-2 sm:py-3  px-4 sm:my-2 border-b border-black/10"

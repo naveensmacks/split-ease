@@ -16,7 +16,9 @@ export default async function EditGroupInfo({ params }: EditGroupInfoProps) {
   return (
     <>
       <div className="px-4 py-2 flex justify-between items-center">
-        <H1 className="sm:my-2 text-xl sm:text-2xl">Edit group info </H1>
+        <H1 className="sm:my-2 text-xl sm:text-2xl text-white">
+          Edit Group Info{" "}
+        </H1>
       </div>
       <GroupForm currencylist={currencylist} groupId={slug} type="edit" />
     </>

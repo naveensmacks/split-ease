@@ -11,7 +11,7 @@ import Image from "next/image";
 export default function AppHeader() {
   const activePathname = usePathname();
   return (
-    <div className="flex items-center sm:h-20 h-16 bg-primecolor gap-x-1 px-4 justify-between">
+    <div className="flex items-center sm:h-20 h-16 bg-primecolor gap-x-1 px-4 justify-between border-b border-white/10">
       <div className="flex items-center gap-x-3">
         <Logo />
         <H1 className="sm:text-3xl text-2xl text-white/80">Split Ease</H1>

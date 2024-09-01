@@ -1,13 +1,17 @@
-import { Expense, Group, User } from "@prisma/client";
+import { Expense, Group, Share, User } from "@prisma/client";
 
 export type GroupEssential = Omit<
   Group,
   "groupId" | "totalExpense" | "updatedAt" | "createdAt" | "createdByUserId"
 >;
 
+type ExpenseWithRelations = Expense & {
+  paidByUser: User;
+  shares: Share[];
+};
 export type GroupWithRelations = Group & {
   users: User[];
-  expenses: Expense[];
+  expenses: ExpenseWithRelations[];
 };
 
 export type MemberEssential = Omit<

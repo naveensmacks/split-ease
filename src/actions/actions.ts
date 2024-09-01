@@ -30,7 +30,12 @@ export async function addgroup(group: unknown, userId: string) {
       },
       include: {
         users: true,
-        expenses: true,
+        expenses: {
+          include: {
+            paidByUser: true,
+            shares: true,
+          },
+        },
       },
     });
     return { isSuccess: true, data: group };
@@ -70,7 +75,12 @@ export async function editGroup(
       },
       include: {
         users: true,
-        expenses: true,
+        expenses: {
+          include: {
+            paidByUser: true,
+            shares: true,
+          },
+        },
       },
     });
     return { isSuccess: true, data: group };
@@ -117,7 +127,12 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
         },
         include: {
           users: true,
-          expenses: true,
+          expenses: {
+            include: {
+              paidByUser: true,
+              shares: true,
+            },
+          },
         },
       });
       return {
@@ -147,7 +162,12 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
         },
         include: {
           users: true,
-          expenses: true,
+          expenses: {
+            include: {
+              paidByUser: true,
+              shares: true,
+            },
+          },
         },
       });
       return {

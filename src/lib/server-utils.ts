@@ -3,7 +3,7 @@ import prisma from "./db";
 import { sleep } from "./utils";
 
 export async function getGroupsByUserId(userId: string) {
-  //await sleep(6000);
+  await sleep(2000);
   const userGroups = await prisma.user.findFirst({
     where: {
       userId: {
@@ -23,7 +23,12 @@ export async function getGroupsByUserId(userId: string) {
           updatedAt: true,
           createdAt: true,
           createdByUserId: true,
-          expenses: true, // This will fetch the expenses for each group
+          expenses: {
+            include: {
+              paidByUser: true,
+              shares: true,
+            },
+          }, // This will fetch the expenses for each group
           users: true, // This will fetch the users for each group
         },
         orderBy: {

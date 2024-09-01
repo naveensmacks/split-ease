@@ -9,8 +9,8 @@ export default async function Page({
 }) {
   return (
     <>
-      <div className="px-4 py-2 flex justify-between items-center">
-        <H1 className="sm:my-2 text-xl sm:text-2xl">Groups</H1>
+      <div className="px-4 sm:px-2 py-2 flex justify-between items-center">
+        <H1 className="text-xl sm:text-2xl text-white sticky">Groups</H1>
         <AddGroupButton />
       </div>
       <GroupList />
