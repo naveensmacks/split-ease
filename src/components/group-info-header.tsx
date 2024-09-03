@@ -10,9 +10,9 @@ export default function GroupInfoHeader() {
       <Image
         src={usersIcon}
         alt={"Groups"}
-        className="w-20 h-20 sm:w-32 sm:h-32 opacity-80 bg-black/20 rounded-full"
+        className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 opacity-80 bg-black/20 rounded-full"
       />
-      <div className="flex flex-col gap-2 max-w-[200px] sm:max-w-[450px]">
+      <div className="flex flex-col gap-2 w-[70%]">
         <H1 className="text-2xl sm:text-3xl truncate items-center text-white">
           {selectedGroup?.groupName}
         </H1>

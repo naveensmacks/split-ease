@@ -11,11 +11,11 @@ export default function GroupInfo() {
     <div className="flex sm:gap-4 gap-2 rounded-lg min-h-[120px] justify-start items-center sm:max-w-[750px]">
       <GroupInfoHeader />
       {selectedGroup?.groupId && (
-        <div className="w-fit">
+        <div className="hidden sm:block">
           <Button className="state-effects opacity-90" asChild>
             <Link href={`/app/groups/create/${selectedGroup.groupId}/edit`}>
               <Pencil1Icon />
-              <span className="ml-1 hidden sm:block">Edit</span>
+              <span className="ml-1">Edit</span>
             </Link>
           </Button>
         </div>

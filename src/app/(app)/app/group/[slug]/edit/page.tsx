@@ -6,16 +6,15 @@ import NavigationHeader from "@/components/navigation-header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-type GroupMembersProps = {
+type GroupEditProps = {
   params: { slug: string };
 };
-export default function GroupDetails({ params }: GroupMembersProps) {
-  const slug = params.slug;
+export default function GroupEdit({ params }: GroupEditProps) {
   return (
-    <GroupDetailsWrapper groupId={slug}>
+    <GroupDetailsWrapper groupId={params.slug}>
       <NavigationHeader
-        backRoute={`/app/groups/create/${params.slug}`}
-        editRoute={`/app/group/${params.slug}/edit`}
+        backRoute={`/app/group/${params.slug}/expenses`}
+        editRoute={`/app/groups/create/${params.slug}/edit`}
       />
       <GroupInfo />
       <MemberList />
@@ -24,7 +23,7 @@ export default function GroupDetails({ params }: GroupMembersProps) {
         className="mt-6 state-effects mx-4 sm:mx-auto sm:px-44 mb-4 bg-opacity-85 rounded-md"
         asChild
       >
-        <Link href={`/app/group/${slug}/expenses`}>Add Expenses</Link>
+        <Link href={`/app/group/${params.slug}/expenses`}>Save</Link>
       </Button>
     </GroupDetailsWrapper>
   );

@@ -12,11 +12,17 @@ export default async function Layout({
 }) {
   console.log("params: ", params);
   return (
-    <GroupDetailsWrapper groupId={params.slug}>
-      <NavigationHeader />
-      <GroupInfoExpanded />
+    <GroupDetailsWrapper groupId={params.slug} className="px-0">
+      <div className="px-2">
+        <NavigationHeader
+          backRoute={"/app/groups"}
+          editRoute={`/app/group/${params.slug}/edit`}
+          useSettingSymbol={true}
+        />
+        <GroupInfoExpanded />
+      </div>
       <NavigationTabs groupId={params.slug} />
-      {children}
+      <div>{children}</div>
     </GroupDetailsWrapper>
   );
 }

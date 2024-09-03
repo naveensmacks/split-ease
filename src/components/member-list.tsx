@@ -16,7 +16,7 @@ export default function MemberList() {
       <button
         onClick={toggleMemberListVisibility}
         aria-label="Toggle Member List"
-        className="flex gap-2 items-center text-white"
+        className="flex gap-2 items-center text-white h-11"
       >
         {isMemberListVisible ? (
           <MinusIcon className="h-5 w-5 sm:h-6 sm:w-6" />

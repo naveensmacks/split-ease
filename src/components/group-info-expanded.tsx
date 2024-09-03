@@ -12,14 +12,10 @@ export default function GroupInfoExpanded() {
       <GroupInfoHeader />
       {selectedGroup?.groupId && (
         <div className="hidden sm:block">
-          <Button
-            className="state-effects opacity-90"
-            variant={"secondary"}
-            asChild
-          >
-            <Link href={`/app/groups/create/${selectedGroup.groupId}/edit`}>
-              <GearIcon className="h-6 w-6" />
-              <span className="ml-2 text-xl">Edit</span>
+          <Button className="state-effects opacity-90 w-[100%]" asChild>
+            <Link href={`/app/group/${selectedGroup.groupId}/edit`}>
+              <GearIcon />
+              <span className="ml-1">Edit</span>
             </Link>
           </Button>
         </div>

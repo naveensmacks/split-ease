@@ -70,12 +70,17 @@ export default function GroupForm({
       actionData = await handleAddGroup(groupData);
     }
     if (actionData.isSuccess && actionData.data) {
-      router.push(`/app/groups/create/${actionData.data.groupId}`);
       toast.success(
         isEditing
           ? "Group Info updated successfully"
           : "Group created successfully"
       );
+      //go back if editing
+      if (isEditing) {
+        router.back();
+      } else {
+        router.push(`/app/groups/create/${actionData.data.groupId}`);
+      }
     } else if (!actionData.isSuccess) {
       if (actionData.fieldErrors) {
         setServerFieldErrors(actionData.fieldErrors, setError);
