@@ -33,7 +33,11 @@ export async function addgroup(group: unknown, userId: string) {
         expenses: {
           include: {
             paidByUser: true,
-            shares: true,
+            shares: {
+              include: {
+                paidToUser: true,
+              },
+            },
           },
         },
       },
@@ -78,7 +82,11 @@ export async function editGroup(
         expenses: {
           include: {
             paidByUser: true,
-            shares: true,
+            shares: {
+              include: {
+                paidToUser: true,
+              },
+            },
           },
         },
       },
@@ -130,7 +138,11 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
           expenses: {
             include: {
               paidByUser: true,
-              shares: true,
+              shares: {
+                include: {
+                  paidToUser: true,
+                },
+              },
             },
           },
         },
@@ -165,7 +177,11 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
           expenses: {
             include: {
               paidByUser: true,
-              shares: true,
+              shares: {
+                include: {
+                  paidToUser: true,
+                },
+              },
             },
           },
         },

@@ -29,3 +29,16 @@ export function setServerFieldErrors<T extends Record<string, any>>(
     }
   }
 }
+
+export function formatDate(date: Date) {
+  //Format in the Form of May 18,2022
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function extractInitials(firstName: string, lastName: string | null) {
+  return firstName.slice(0, 1) + (lastName ? lastName.slice(0, 1) : ".");
+}

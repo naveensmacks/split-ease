@@ -5,10 +5,15 @@ export type GroupEssential = Omit<
   "groupId" | "totalExpense" | "updatedAt" | "createdAt" | "createdByUserId"
 >;
 
-type ExpenseWithRelations = Expense & {
-  paidByUser: User;
-  shares: Share[];
+type ShareWithRelations = Share & {
+  paidToUser: User;
 };
+
+export type ExpenseWithRelations = Expense & {
+  paidByUser: User;
+  shares: ShareWithRelations[];
+};
+
 export type GroupWithRelations = Group & {
   users: User[];
   expenses: ExpenseWithRelations[];

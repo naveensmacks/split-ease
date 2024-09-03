@@ -26,7 +26,11 @@ export async function getGroupsByUserId(userId: string) {
           expenses: {
             include: {
               paidByUser: true,
-              shares: true,
+              shares: {
+                include: {
+                  paidToUser: true,
+                },
+              },
             },
           }, // This will fetch the expenses for each group
           users: true, // This will fetch the users for each group

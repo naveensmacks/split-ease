@@ -1,6 +1,10 @@
 "use client";
 import { addgroup, addMemberToGroup, editGroup } from "@/actions/actions";
-import { GroupEssential, GroupWithRelations } from "@/lib/types";
+import {
+  ExpenseWithRelations,
+  GroupEssential,
+  GroupWithRelations,
+} from "@/lib/types";
 import { TGroupForm, TMemberForm } from "@/lib/validation";
 import { Group, User } from "@prisma/client";
 import { createContext, useState } from "react";
@@ -23,6 +27,9 @@ type GroupContextType = {
     newMember: TMemberForm,
     groupId: string
   ) => ReturnType<typeof addMemberToGroup>;
+  selectedExpenseId: string | null;
+  handleSelectedExpenseId: (expenseId: string) => void;
+  getExpenseFromList: (expenseId: string) => ExpenseWithRelations | null;
 };
 
 type GroupContextProviderProps = {
@@ -38,6 +45,9 @@ export default function GroupContextProvider({
 }: GroupContextProviderProps) {
   const [groupList, setGroupList] = useState<GroupWithRelations[]>(data);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(
+    null
+  );
 
   //derived state
   const selectedGroup =
@@ -50,6 +60,12 @@ export default function GroupContextProvider({
     groupId: GroupWithRelations["groupId"]
   ) => {
     setSelectedGroupId(groupId);
+  };
+
+  const handleSelectedExpenseId = (expenseId: string) => {
+    if (!selectedGroupId) {
+      setSelectedExpenseId(expenseId);
+    }
   };
 
   //Group Form
@@ -87,6 +103,14 @@ export default function GroupContextProvider({
 
   const getGroupFromList = (groupId: string) => {
     return groupList?.find((group) => group.groupId === groupId) || null;
+  };
+
+  const getExpenseFromList = (expenseId: string) => {
+    return (
+      selectedGroup?.expenses?.find(
+        (expense) => expense.expenseId === expenseId
+      ) || null
+    );
   };
 
   const handleEditGroupList = (
@@ -127,6 +151,9 @@ export default function GroupContextProvider({
         handleChangeSelectedGroupId,
         selectedGroupMemberList,
         handleAddMember,
+        selectedExpenseId,
+        handleSelectedExpenseId,
+        getExpenseFromList,
       }}
     >
       {children}

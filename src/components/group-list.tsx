@@ -1,5 +1,6 @@
 "use client";
 import { useGroupContext } from "@/lib/hooks";
+import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
 export default function GroupList() {
@@ -18,17 +19,7 @@ export default function GroupList() {
             </div>
             <div className="flex justify-between text-black/50">
               <div>Members: {group.users.length}</div>
-              <div>
-                {(() => {
-                  const createdDate = group.createdAt;
-                  //Format in the Form of May 18,2022
-                  return createdDate.toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  });
-                })()}
-              </div>
+              <div>{formatDate(new Date(group.createdAt))}</div>
             </div>
           </div>
         </Link>
