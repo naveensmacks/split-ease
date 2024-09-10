@@ -11,9 +11,8 @@ export default function NavigationHeader({
   editRoute,
   useSettingSymbol = false,
 }: NavigationHeaderProps) {
-  console.log("editRoute: ", editRoute);
   return (
-    <div className="pt-1 flex justify-between items-center sm:hidden">
+    <div className="p-1 flex justify-between items-center sm:hidden">
       <Link href={backRoute}>
         <ArrowLeftIcon className="w-8 h-8" />
       </Link>

@@ -2,7 +2,57 @@
 
 import prisma from "@/lib/db";
 import { getUserByEmail, isMemberOfGroup } from "@/lib/server-utils";
-import { groupFormSchema, memberFormSchema } from "@/lib/validation";
+import {
+  expenseSchema,
+  groupFormSchema,
+  memberFormSchema,
+} from "@/lib/validation";
+//--- Expense actions ---
+
+export async function addExpense(
+  expense: unknown,
+  userId: string,
+  groupId: string
+) {
+  const validatedExpense = expenseSchema.safeParse(expense);
+  if (!validatedExpense.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedExpense.error.flatten().fieldErrors,
+    };
+  }
+  //remove  validatedGroup.data.currencyType from validatedGroup.data
+  const { shares, paidById, ...data } = validatedExpense.data;
+
+  try {
+    const expenseWithRelations = await prisma.expense.create({
+      data: {
+        ...data,
+        group: { connect: { groupId: groupId } },
+        paidByUser: { connect: { userId: paidById } },
+        addedByUser: { connect: { userId: userId } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        paidByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    console.log("error: ", error);
+    return {
+      isSuccess: false,
+      message: "Could not create expense. Try again later.",
+    };
+  }
+}
 
 // --- group actions ---
 export async function addgroup(group: unknown, userId: string) {
@@ -13,8 +63,6 @@ export async function addgroup(group: unknown, userId: string) {
       fieldErrors: validatedGroup.error.flatten().fieldErrors,
     };
   }
-  //change currency type to code by taking only the last three letters
-  const code = validatedGroup.data.currencyType.slice(-3);
 
   //remove  validatedGroup.data.currencyType from validatedGroup.data
   const { currencyType, ...data } = validatedGroup.data;
@@ -26,7 +74,7 @@ export async function addgroup(group: unknown, userId: string) {
         ...data,
         users: { connect: [{ userId: userId }] },
         createdBy: { connect: { userId: userId } },
-        currency: { connect: { code: code } },
+        currency: { connect: { code: currencyType } },
       },
       include: {
         users: true,
@@ -64,8 +112,6 @@ export async function editGroup(
       fieldErrors: validatedGroup.error.flatten().fieldErrors,
     };
   }
-  //change currency type to code by taking only the last three letters
-  const code = validatedGroup.data.currencyType.slice(-3);
 
   //remove  validatedGroup.data.currencyType from validatedGroup.data
   const { currencyType, ...data } = validatedGroup.data;
@@ -75,7 +121,7 @@ export async function editGroup(
       data: {
         ...data,
         users: { connect: [{ userId: userId }] },
-        currency: { connect: { code: code } },
+        currency: { connect: { code: currencyType } },
       },
       include: {
         users: true,
@@ -162,15 +208,16 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
     //create new member(guest) for non-registered users
     newMember.isRegistered = false; //since we havenot added that check in elseif, we are setting it here(to be robust)
     try {
-      const member = await prisma.user.create({
-        data: {
-          ...newMember,
-        },
-      });
+      // const member = await prisma.user.create({
+      //   data: {
+      //     ...newMember,
+      //   },
+      // });
+      const memList = [{ ...newMember }];
       const group = await prisma.group.update({
         where: { groupId: groupId },
         data: {
-          users: { connect: { userId: member.userId } },
+          users: { create: memList },
         },
         include: {
           users: true,

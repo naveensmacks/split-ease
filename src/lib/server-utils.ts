@@ -114,6 +114,7 @@ export async function isMemberOfGroup(email: string, groupId: string) {
   return isMemGroup;
 }
 
+//ToDo: Not used
 export async function getGroupByGroupId(groupId: string) {
   const group = await prisma.group.findFirst({
     where: {

@@ -18,64 +18,56 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ControllerRenderProps, UseFormSetValue } from "react-hook-form";
-
-export function ComboBox({
+import {
+  ControllerRenderProps,
+  UseFormSetValue,
+  FieldValues,
+  Path,
+  PathValue,
+} from "react-hook-form";
+export function ComboBox<TFieldValues extends FieldValues>({
   list,
-  type = "Currency",
+  type,
   field,
   setValue,
 }: {
   list: { value: string; label: string }[];
-  type?: string;
-  field: ControllerRenderProps<
-    {
-      groupName: string;
-      groupDescription: string;
-      currencyType: string;
-      splitEase: boolean;
-    },
-    "currencyType"
-  >;
-  setValue: UseFormSetValue<{
-    groupName: string;
-    groupDescription: string;
-    splitEase: boolean;
-    currencyType: string;
-  }>;
+  type: Path<TFieldValues>;
+  field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>;
+  setValue: UseFormSetValue<TFieldValues>;
 }) {
+  const popularCurrencies = [
+    {
+      value: "USD",
+      label: "US Dollar - USD",
+    },
+    {
+      value: "INR",
+      label: "Indian Rupee - INR",
+    },
+    {
+      value: "EUR",
+      label: "Euro - EUR",
+    },
+    {
+      value: "GBP",
+      label: "British Pound - GBP",
+    },
+  ];
   const getPopularCurrencies = () => {
-    const popularCurrencies = [
-      {
-        value: "USD",
-        label: "US Dollar - USD",
-      },
-      {
-        value: "INR",
-        label: "Indian Rupee - INR",
-      },
-      {
-        value: "EUR",
-        label: "Euro - EUR",
-      },
-      {
-        value: "GBP",
-        label: "British Pound - GBP",
-      },
-    ];
-
     return (
       <div>
         <span className="text-zinc-500 px-1">Popular</span>
         {popularCurrencies.map((item) => (
           <CommandItem
             key={item.value}
-            value={item.label}
+            value={item.value}
             onSelect={(currentValue) => {
+              const newValue = currentValue === field.value ? "" : currentValue;
               //set "" to unselect item
               setValue(
-                "currencyType",
-                currentValue === field.value ? "" : currentValue
+                type,
+                newValue as PathValue<TFieldValues, Path<TFieldValues>>
               );
               setOpen(false);
             }}
@@ -84,7 +76,7 @@ export function ComboBox({
             <CheckIcon
               className={cn(
                 "ml-auto h-4 w-4",
-                field.value === item.label ? "opacity-100" : "opacity-0"
+                field.value === item.value ? "opacity-100" : "opacity-0"
               )}
             />
           </CommandItem>
@@ -104,7 +96,12 @@ export function ComboBox({
             className="w-full justify-between rounded-md opacity-80"
           >
             {field.value ? (
-              field.value
+              list.find((item) => item.value === field.value) ? (
+                list.find((item) => item.value === field.value)?.label
+              ) : (
+                popularCurrencies.find((item) => item.value === field.value)
+                  ?.label
+              )
             ) : (
               <span className="opacity-60">{`Select ${type}...`}</span>
             )}
@@ -116,18 +113,21 @@ export function ComboBox({
             <CommandInput placeholder={`Search ${type}...`} className="h-9" />
             <CommandList>
               <CommandEmpty>{`No ${type} found.`}</CommandEmpty>
-              <CommandGroup>
-                {type === "Currency" && getPopularCurrencies()}
-              </CommandGroup>
+              {type === "currencyType" && (
+                <CommandGroup>{getPopularCurrencies()}</CommandGroup>
+              )}
               <CommandGroup>
                 {list.map((item) => (
                   <CommandItem
                     key={item.value}
-                    value={item.label}
+                    value={item.value}
                     onSelect={(currentValue) => {
+                      const newValue =
+                        currentValue === field.value ? "" : currentValue;
+                      console.log("newValue: ", newValue);
                       setValue(
-                        "currencyType",
-                        currentValue === field.value ? "" : currentValue
+                        type,
+                        newValue as PathValue<TFieldValues, Path<TFieldValues>>
                       );
                       setOpen(false);
                     }}
@@ -136,7 +136,7 @@ export function ComboBox({
                     <CheckIcon
                       className={cn(
                         "ml-auto h-4 w-4",
-                        field.value === item.label ? "opacity-100" : "opacity-0"
+                        field.value === item.value ? "opacity-100" : "opacity-0"
                       )}
                     />
                   </CommandItem>

@@ -117,7 +117,7 @@ async function main() {
             expenseDescription: "Dinner at Eiffel Tower",
             amount: 7000,
             expenseDate: new Date(),
-            splitBy: "EQUAL",
+            isSplitEqually: true,
             addedById: user1!.userId,
             shares: {
               create: [
@@ -145,7 +145,7 @@ async function main() {
             expenseDescription: "Car rental",
             amount: 4000,
             expenseDate: new Date(),
-            splitBy: "UNEQUAL",
+            isSplitEqually: false,
             addedById: user1!.userId,
             shares: {
               create: [
@@ -193,7 +193,7 @@ async function main() {
             expenseDescription: "Snacks and drinks",
             amount: 2000,
             expenseDate: new Date(),
-            splitBy: "SHARES",
+            isSplitEqually: false,
             addedById: user1!.userId,
             shares: {
               create: [
@@ -221,7 +221,7 @@ async function main() {
             expenseDescription: "Movie tickets",
             amount: 3000,
             expenseDate: new Date(),
-            splitBy: "EQUAL",
+            isSplitEqually: true,
             addedById: user2!.userId,
             shares: {
               create: [
@@ -264,7 +264,7 @@ async function main() {
             expenseDescription: "Hall rental",
             amount: 500,
             expenseDate: new Date(),
-            splitBy: "UNEQUAL",
+            isSplitEqually: false,
             addedById: user3!.userId,
             shares: {
               create: [
@@ -305,7 +305,7 @@ async function main() {
             expenseDescription: "Groceries for the trip",
             amount: 250,
             expenseDate: new Date(),
-            splitBy: "UNEQUAL",
+            isSplitEqually: false,
             addedById: user1!.userId,
             shares: {
               create: [
@@ -330,7 +330,7 @@ async function main() {
             expenseDescription: "Beverages",
             amount: 1500,
             expenseDate: new Date(),
-            splitBy: "SHARES",
+            isSplitEqually: false,
             addedById: user5!.userId,
             shares: {
               create: [

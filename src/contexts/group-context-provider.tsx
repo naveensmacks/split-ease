@@ -1,6 +1,12 @@
 "use client";
-import { addgroup, addMemberToGroup, editGroup } from "@/actions/actions";
 import {
+  addExpense,
+  addgroup,
+  addMemberToGroup,
+  editGroup,
+} from "@/actions/actions";
+import {
+  ExpenseEssential,
   ExpenseWithRelations,
   GroupEssential,
   GroupWithRelations,
@@ -30,6 +36,9 @@ type GroupContextType = {
   selectedExpenseId: string | null;
   handleSelectedExpenseId: (expenseId: string) => void;
   getExpenseFromList: (expenseId: string) => ExpenseWithRelations | null;
+  handleAddExpense: (
+    newExpense: ExpenseEssential
+  ) => ReturnType<typeof addExpense>;
 };
 
 type GroupContextProviderProps = {
@@ -66,6 +75,24 @@ export default function GroupContextProvider({
     if (!selectedGroupId) {
       setSelectedExpenseId(expenseId);
     }
+  };
+  //expense form
+  const handleAddExpense = async (newExpense: ExpenseEssential) => {
+    const actionData = await addExpense(newExpense, userId, selectedGroupId!);
+    if (actionData.isSuccess && actionData.data) {
+      setGroupList((prev) =>
+        prev.map((group) => {
+          if (group.groupId === selectedGroupId) {
+            return {
+              ...group,
+              expenses: [...group.expenses, actionData.data],
+            };
+          }
+          return group;
+        })
+      );
+    }
+    return actionData;
   };
 
   //Group Form
@@ -154,6 +181,7 @@ export default function GroupContextProvider({
         selectedExpenseId,
         handleSelectedExpenseId,
         getExpenseFromList,
+        handleAddExpense,
       }}
     >
       {children}

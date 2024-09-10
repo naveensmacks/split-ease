@@ -56,10 +56,10 @@ model Expense {
   expenseType        ExpenseType
   paidById           String
   addedById          String
-  expenseDescription String?
-  amount             Decimal
+  expenseDescription String
+  amount             Float
   expenseDate        DateTime
-  splitBy            SplitBy
+  isSplitEqually     Boolean
   group              Group       @relation(fields: [groupId], references: [groupId])
   paidByUser         User        @relation("PaidByUser", fields: [paidById], references: [userId])
   addedByUser        User        @relation("AddedByUser", fields: [addedById], references: [userId])
@@ -73,7 +73,7 @@ model Share {
   expenseId  String
   share      Int?
   paidToId   String
-  amount     Decimal
+  amount     Float
   expense    Expense @relation(fields: [expenseId], references: [expenseId])
   paidToUser User    @relation(fields: [paidToId], references: [userId])
 }
@@ -83,7 +83,7 @@ model Balance {
   groupId    String
   owedToId   String
   owedById   String
-  amount     Decimal
+  amount     Float
   settled    Boolean
   group      Group   @relation(fields: [groupId], references: [groupId])
   owedToUser User    @relation("BalanceOwedTo", fields: [owedToId], references: [userId])
@@ -106,10 +106,4 @@ enum ExpenseType {
   UTILITIES
   MOVIE
   OTHER
-}
-
-enum SplitBy {
-  EQUAL
-  UNEQUAL
-  SHARES
 }

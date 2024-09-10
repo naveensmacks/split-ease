@@ -1,4 +1,5 @@
 "use client";
+import AddExpenseButton from "@/components/add-expense-btn";
 import { useGroupContext } from "@/lib/hooks";
 import Link from "next/link";
 
@@ -11,7 +12,10 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   const expenses = selectedGroup?.expenses;
   const currencyType = selectedGroup?.currencyType;
   return (
-    <div>
+    <>
+      <div className="fixed sm:hidden right-4 bottom-14">
+        <AddExpenseButton />
+      </div>
       {expenses &&
         expenses.length > 0 &&
         expenses.map((item) => {
@@ -41,6 +45,6 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
             </Link>
           );
         })}
-    </div>
+    </>
   );
 }

@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { Button } from "./ui/button";
+import { PlusIcon } from "@radix-ui/react-icons";
+import AddExpenseButton from "./add-expense-btn";
 
 type NavigationTabsProps = {
   groupId: string;
@@ -47,6 +50,9 @@ export default function NavigationTabs({ groupId }: NavigationTabsProps) {
             className="bg-white h-1 w-full absolute rounded-sm bottom-2"
           ></motion.div>
         )}
+      </div>
+      <div className="hidden bottom-[-25px] right-0 sm:block sm:absolute">
+        <AddExpenseButton />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { ExpenseType, User } from "@prisma/client";
 import { z } from "zod";
 export const groupFormSchema = z.object({
   groupName: z
@@ -71,3 +71,72 @@ export const memberFormSchema = z
   });
 
 export type TMemberForm = z.infer<typeof memberFormSchema>;
+
+export const expenseSchema = z
+  .object({
+    expenseType: z.enum(
+      [
+        ExpenseType.FOOD,
+        ExpenseType.PETROL,
+        ExpenseType.SNACKS,
+        ExpenseType.DRINKS,
+        ExpenseType.GROCERIES,
+        ExpenseType.RENT,
+        ExpenseType.UTILITIES,
+        ExpenseType.MOVIE,
+        ExpenseType.OTHER,
+      ],
+      {
+        message: "Expense Type is required.",
+      }
+    ),
+    expenseDescription: z
+      .string()
+      .min(1, "Expense Description is required")
+      .max(100, "Expense Description can't be longer than 100 characters"),
+    amount: z.preprocess(
+      (val) => parseFloat(val as string),
+      z
+        .number({ message: "Amount is required" })
+        .positive("Amount must be a positive number")
+    ),
+    paidById: z
+      .string({
+        //when you dont give default vaue in zod resolver, use this required_error or default just "required" will be thrown
+        required_error: "Please select who paid.",
+      })
+      .min(1, "Please select who paid."),
+    expenseDate: z.date({ required_error: "Date of expense is required." }),
+    isSplitEqually: z.boolean().default(true),
+    shares: z.array(
+      z.object({
+        paidToId: z.string(),
+        share: z.preprocess(
+          (val) => parseFloat(val as string),
+          z.number().min(0, "Share must be 0 or greater")
+        ),
+        amount: z.preprocess(
+          (val) => parseFloat(val as string),
+          z.number().min(0, "Amount must be 0 or greater")
+        ),
+      })
+    ),
+  })
+  .refine(
+    (data) => {
+      // Custom validation to check if the sum of shares equals the amount
+      const totalAmount = data.shares.reduce(
+        (prevVal, curr) => prevVal + curr.amount,
+        0
+      );
+      console.log("totalAmount: ", totalAmount);
+      console.log("data.amount: ", data.amount);
+      return totalAmount == data.amount;
+    },
+    {
+      path: ["amount"],
+      message: "Amount must equal to the sum of shares",
+    }
+  );
+
+export type TExpenseForm = z.infer<typeof expenseSchema>;

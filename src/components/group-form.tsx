@@ -28,8 +28,8 @@ export default function GroupForm({
 
   let groupInfo;
   if (isEditing && groupId) {
-    const { getGroupFromList } = useGroupContext();
-    groupInfo = getGroupFromList(groupId);
+    const { selectedGroup } = useGroupContext();
+    groupInfo = selectedGroup;
   }
   const {
     register,
@@ -155,6 +155,7 @@ export default function GroupForm({
                 render={({ field }) => (
                   <ComboBox
                     list={currencylist}
+                    type="currencyType"
                     field={field}
                     setValue={setValue}
                   />

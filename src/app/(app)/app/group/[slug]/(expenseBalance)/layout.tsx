@@ -12,7 +12,7 @@ export default async function Layout({
 }) {
   console.log("params: ", params);
   return (
-    <GroupDetailsWrapper groupId={params.slug} className="px-0">
+    <GroupDetailsWrapper groupId={params.slug} className="px-0 h-full">
       <div className="px-2">
         <NavigationHeader
           backRoute={"/app/groups"}

@@ -23,3 +23,10 @@ export type MemberEssential = Omit<
   User,
   "hashedPassword" | "updatedAt" | "createdAt"
 >;
+
+export type ExpenseEssential = { shares: ShareEssential[] } & Omit<
+  Expense,
+  "expenseId" | "groupId" | "updatedAt" | "createdAt" | "addedById"
+>;
+
+type ShareEssential = Omit<Share, "shareId" | "expenseId" | "paidToUserId">;
