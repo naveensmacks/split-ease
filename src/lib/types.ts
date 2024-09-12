@@ -11,6 +11,8 @@ type ShareWithRelations = Share & {
 
 export type ExpenseWithRelations = Expense & {
   paidByUser: User;
+  addedByUser: User;
+  updatedByUser: User;
   shares: ShareWithRelations[];
 };
 
@@ -26,7 +28,12 @@ export type MemberEssential = Omit<
 
 export type ExpenseEssential = { shares: ShareEssential[] } & Omit<
   Expense,
-  "expenseId" | "groupId" | "updatedAt" | "createdAt" | "addedById"
+  | "expenseId"
+  | "groupId"
+  | "updatedAt"
+  | "createdAt"
+  | "addedById"
+  | "updatedById"
 >;
 
 type ShareEssential = Omit<Share, "shareId" | "expenseId" | "paidToUserId">;

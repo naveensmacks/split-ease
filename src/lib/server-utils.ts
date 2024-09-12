@@ -26,6 +26,8 @@ export async function getGroupsByUserId(userId: string) {
           expenses: {
             include: {
               paidByUser: true,
+              addedByUser: true,
+              updatedByUser: true,
               shares: {
                 include: {
                   paidToUser: true,

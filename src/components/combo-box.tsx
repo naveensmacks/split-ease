@@ -28,11 +28,13 @@ import {
 export function ComboBox<TFieldValues extends FieldValues>({
   list,
   type,
+  label,
   field,
   setValue,
 }: {
   list: { value: string; label: string }[];
   type: Path<TFieldValues>;
+  label: string;
   field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>;
   setValue: UseFormSetValue<TFieldValues>;
 }) {
@@ -103,16 +105,16 @@ export function ComboBox<TFieldValues extends FieldValues>({
                   ?.label
               )
             ) : (
-              <span className="opacity-60">{`Select ${type}...`}</span>
+              <span className="opacity-60">{`Select ${label}...`}</span>
             )}
             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-min-full p-0">
           <Command>
-            <CommandInput placeholder={`Search ${type}...`} className="h-9" />
+            <CommandInput placeholder={`Search ${label}...`} className="h-9" />
             <CommandList>
-              <CommandEmpty>{`No ${type} found.`}</CommandEmpty>
+              <CommandEmpty>{`No ${label} found.`}</CommandEmpty>
               {type === "currencyType" && (
                 <CommandGroup>{getPopularCurrencies()}</CommandGroup>
               )}

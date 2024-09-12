@@ -39,6 +39,9 @@ export function formatDate(date: Date) {
   });
 }
 
-export function extractInitials(firstName: string, lastName: string | null) {
+export function extractInitials(
+  firstName: string,
+  lastName: string | undefined | null
+) {
   return firstName.slice(0, 1) + (lastName ? lastName.slice(0, 1) : ".");
 }

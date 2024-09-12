@@ -10,12 +10,13 @@ import { ComboBox } from "./combo-box";
 import { ExpenseType } from "@prisma/client";
 import { DatePicker } from "./date-picker";
 import { Button } from "./ui/button";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import H1 from "./h1";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
 import { setServerFieldErrors } from "@/lib/utils";
+import { ExpenseWithRelations } from "@/lib/types";
 
 type ExpenseFormProps = {
   type: "create" | "edit";
@@ -28,11 +29,14 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     selectedGroup,
     getExpenseFromList,
     handleAddExpense,
+    handleEditExpense,
   } = useGroupContext();
   const router = useRouter();
-  let expenseinfo;
+  let expenseinfo: ExpenseWithRelations | null = null;
+  console.log(isEditing, selectedExpenseId, selectedGroup);
   if (isEditing && selectedExpenseId) {
     expenseinfo = getExpenseFromList(selectedExpenseId);
+    console.log("expenseinfo: ", expenseinfo);
   }
 
   const expenseTypelist = Object.keys(ExpenseType).map((key) => ({
@@ -40,14 +44,16 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     label: key.charAt(0) + key.slice(1).toLowerCase(),
   }));
 
-  const groupMemberList = selectedGroup
-    ? selectedGroup.users.map((user) => ({
-        value: user.userId,
-        label: user.firstName + " " + user.lastName,
-      }))
-    : [];
+  const memberList = useMemo(
+    () => (selectedGroup ? selectedGroup.users : []),
+    [selectedGroup]
+  );
 
-  const memberList = selectedGroup ? selectedGroup.users : [];
+  const memberListOptions = memberList.map((user) => ({
+    value: user.userId,
+    label: user.firstName + " " + user.lastName,
+  }));
+
   const defaultShares =
     memberList.length > 0
       ? memberList.map((user) => ({
@@ -64,42 +70,87 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     control,
     handleSubmit,
     setError,
-    //isSubmitting will work for only On Submit I guess
     formState: { isSubmitting, errors },
     getValues,
     setValue,
     reset,
   } = useForm<TExpenseForm>({
     resolver: zodResolver(expenseSchema),
-    defaultValues:
-      isEditing && expenseinfo
-        ? {
-            //prepopulate for edit scenario
-          }
-        : {
-            expenseType: ExpenseType.PETROL,
-            expenseDescription: "",
-            expenseDate: new Date(),
-            isSplitEqually: true,
-            //when component re-renders default values will not be set again so need to use useffect
-            //to set the values, because first time the memberList will be empty[] as it is async data fetching I guess
-            shares: defaultShares,
-          },
+    defaultValues: isEditing
+      ? {
+          //prepopulate for edit scenario
+          expenseDescription: expenseinfo?.expenseDescription,
+          expenseType: expenseinfo?.expenseType,
+          expenseDate: expenseinfo
+            ? new Date(expenseinfo?.expenseDate)
+            : new Date(),
+          isSplitEqually: expenseinfo?.isSplitEqually,
+          //shares: expenseinfo.shares,
+          shares: expenseinfo?.shares.map((share) => ({
+            amount: share.amount,
+            paidToId: share.paidToId,
+            share: share.share ?? 0, // add a default value if share is null
+          })),
+        }
+      : {
+          expenseType: ExpenseType.FOOD,
+          expenseDescription: "",
+          expenseDate: new Date(),
+          isSplitEqually: true,
+          //when component re-renders default values will not be set again so need to use useffect
+          //to set the values, because first time the memberList will be empty[] as it is async data fetching I guess
+          shares: defaultShares,
+        },
   });
 
   useEffect(() => {
-    // useEffect hook to watch for changes in the memberList and reinitialize the form values when it updates
-    if (memberList.length > 0) {
-      const updatedShares = memberList.map((user) => ({
+    const getShares = (isEditing: boolean) => {
+      let list = memberList.map((user) => ({
         paidToId: user.userId,
         share: 1,
         amount: 0.0,
       }));
+      if (isEditing && expenseinfo) {
+        list = list.map((share) => {
+          const existingShare = expenseinfo.shares.find(
+            (s) => s.paidToId === share.paidToId
+          );
+          if (existingShare) {
+            return {
+              paidToId: share.paidToId,
+              share: existingShare.share ?? 0,
+              amount: existingShare.amount,
+            };
+          } else {
+            return { share: 0, amount: 0.0, paidToId: share.paidToId };
+          }
+        });
+      }
+
+      return list;
+    };
+    // useEffect hook to watch for changes in the memberList and reinitialize the form values when it updates
+    if (isEditing && expenseinfo) {
+      const expense = {
+        //prepopulate for edit scenario
+        expenseType: expenseinfo.expenseType,
+        expenseDescription: expenseinfo.expenseDescription,
+        expenseDate: new Date(expenseinfo.expenseDate),
+        amount: expenseinfo.amount,
+        isSplitEqually: expenseinfo.isSplitEqually,
+        paidById: expenseinfo.paidById,
+        //shares: expenseinfo.shares,
+        shares: getShares(isEditing),
+      };
+
+      reset(expense);
+    } else if (memberList.length > 0) {
+      const updatedShares = getShares(isEditing);
 
       // Update the form values using setValue or reset
       reset({ shares: updatedShares });
     }
-  }, [memberList, reset]);
+  }, [memberList, reset, setValue, isEditing, expenseinfo]);
 
   const handleIncrementShare = (index: number) => {
     const shares = watch("shares");
@@ -107,6 +158,9 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     updatedShares[index].share = Number(updatedShares[index].share) + 1;
     setValue("shares", updatedShares);
     recalculateShares();
+    if (watch("isSplitEqually")) {
+      setValue("isSplitEqually", false);
+    }
   };
 
   const handleDecrementShare = (index: number) => {
@@ -116,6 +170,9 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     updatedShares[index].amount = 0.0;
     setValue("shares", updatedShares);
     recalculateShares();
+    if (watch("isSplitEqually")) {
+      setValue("isSplitEqually", false);
+    }
   };
 
   const recalculateShares = (
@@ -186,22 +243,39 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
 
   const splitEqually = () => {
     const shares = watch("shares");
-    const totalAmount = watch("amount");
-    const eachAmount = totalAmount / shares.length;
-    const newShares = shares.map((share) => ({
+    const totalAmount = new Decimal(watch("amount"));
+    const eachAmount = totalAmount.dividedBy(shares.length).toDecimalPlaces(2);
+    const distributedShares = shares.map((share) => ({
       ...share,
       share: 1,
-      amount: eachAmount,
+      amount: Number(eachAmount),
     }));
-    setValue("shares", newShares);
+    // Handle rounding discrepancy
+    const sumOfShares = distributedShares.reduce(
+      (sum, share) => sum.plus(share.amount),
+      new Decimal(0)
+    );
+
+    const diff = totalAmount.minus(sumOfShares);
+
+    if (!diff.isZero()) {
+      distributedShares[0].amount = Number(
+        new Decimal(distributedShares[0].amount).plus(diff).toDecimalPlaces(2)
+      );
+    }
+
+    setValue("shares", distributedShares);
   };
 
   const noOfMembersInvolved = () => {
     const shares = watch("shares");
-    return shares.reduce((prevval, share) => {
-      let involved = share.amount ? 1 : 0;
-      return prevval + involved;
-    }, 0);
+    return (
+      shares &&
+      shares.reduce((prevval, share) => {
+        let involved = share.amount ? 1 : 0;
+        return prevval + involved;
+      }, 0)
+    );
   };
 
   const onSubmit = async () => {
@@ -210,10 +284,10 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     let expenseData = getValues();
     console.log("expenseData: ", expenseData);
     let actionData;
-    if (isEditing) {
+    if (!isEditing) {
       actionData = await handleAddExpense(expenseData);
     } else {
-      actionData = await handleAddExpense(expenseData);
+      actionData = await handleEditExpense(expenseData);
     }
     console.log("actionData: ", actionData);
     if (actionData.isSuccess && actionData.data) {
@@ -222,12 +296,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
           ? "Expense updated successfully"
           : "Expense added successfully"
       );
-      //go back if editing
-      if (isEditing) {
-        router.back();
-      } else {
-        router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
-      }
+      router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
     } else if (!actionData.isSuccess) {
       if (actionData.fieldErrors) {
         setServerFieldErrors(actionData.fieldErrors, setError);
@@ -253,6 +322,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
             <ComboBox
               list={expenseTypelist}
               type="expenseType"
+              label="type of expense"
               field={field}
               setValue={setValue}
             />
@@ -301,8 +371,9 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
           name="paidById"
           render={({ field }) => (
             <ComboBox
-              list={groupMemberList}
+              list={memberListOptions}
               type="paidById"
+              label="member"
               field={field}
               setValue={setValue}
             />

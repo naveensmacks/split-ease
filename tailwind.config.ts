@@ -16,6 +16,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("@tailwindcss/line-clamp")],
+  // As of Tailwind CSS v3.3, the `@tailwindcss/line-clamp` plugin is now included by default.
+  // plugins: [require("@tailwindcss/line-clamp")],
 };
 export default config;

@@ -1,6 +1,8 @@
 "use client";
 import AddExpenseButton from "@/components/add-expense-btn";
+import DisplayInitials from "@/components/display-initials";
 import { useGroupContext } from "@/lib/hooks";
+import { ExpenseWithRelations } from "@/lib/types";
 import Link from "next/link";
 
 type ExpensesPageProps = {
@@ -25,13 +27,10 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               key={item.expenseId}
               className="flex px-5 py-5 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
             >
-              {/* add initial of first name and last name in a circle */}
-              <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center">
-                {item.paidByUser.firstName.slice(0, 1) +
-                  (item.paidByUser.lastName
-                    ? item.paidByUser.lastName.slice(0, 1)
-                    : ".")}
-              </div>
+              <DisplayInitials
+                firstName={item.paidByUser.firstName}
+                lastName={item.paidByUser.lastName}
+              />
               <div className="flex flex-col grow mx-3">
                 <div>{item.expenseDescription}</div>
                 <div className="text-black/50">

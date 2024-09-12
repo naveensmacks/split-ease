@@ -27,8 +27,8 @@ export default function GroupForm({
   const isEditing = type === "edit";
 
   let groupInfo;
+  const { selectedGroup } = useGroupContext();
   if (isEditing && groupId) {
-    const { selectedGroup } = useGroupContext();
     groupInfo = selectedGroup;
   }
   const {
@@ -54,7 +54,7 @@ export default function GroupForm({
         }
       : {
           splitEase: true,
-          currencyType: "US Dollar - USD",
+          currencyType: "USD",
         },
   });
   const { handleAddGroup, handleEditGroup } = useGroupContext();
@@ -156,6 +156,7 @@ export default function GroupForm({
                   <ComboBox
                     list={currencylist}
                     type="currencyType"
+                    label="currency"
                     field={field}
                     setValue={setValue}
                   />

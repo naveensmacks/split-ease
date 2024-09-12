@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { AR_One_Sans } from "next/font/google";
+import { AR_One_Sans, Quicksand } from "next/font/google";
 import "./globals.css";
 
-const inter = AR_One_Sans({ subsets: ["latin"] });
+const font = Quicksand({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Split Ease",
@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className}  bg-secondcolor text-zinc-900`}>
+      <body className={`${font.className}  bg-secondcolor text-zinc-900`}>
         {children}
       </body>
     </html>

@@ -7,12 +7,12 @@ type ExpenseSharesPageProps = {
 export default function ExpenseSharesPage({ params }: ExpenseSharesPageProps) {
   const { slug, expenseId } = params;
   return (
-    <div>
+    <>
       <NavigationHeader
         backRoute={`/app/group/${slug}/expenses`}
         editRoute={`/app/group/${slug}/expenses/${expenseId}/edit`}
       />
       <ExpenseDetailsView groupId={slug} expenseId={expenseId} />
-    </div>
+    </>
   );
 }

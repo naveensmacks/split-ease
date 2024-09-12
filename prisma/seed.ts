@@ -119,6 +119,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: true,
             addedById: user1!.userId,
+            updatedById: user1!.userId,
             shares: {
               create: [
                 {
@@ -147,6 +148,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: false,
             addedById: user1!.userId,
+            updatedById: user1!.userId,
             shares: {
               create: [
                 {
@@ -195,6 +197,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: false,
             addedById: user1!.userId,
+            updatedById: user1!.userId,
             shares: {
               create: [
                 {
@@ -223,6 +226,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: true,
             addedById: user2!.userId,
+            updatedById: user2!.userId,
             shares: {
               create: [
                 {
@@ -266,6 +270,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: false,
             addedById: user3!.userId,
+            updatedById: user3!.userId,
             shares: {
               create: [
                 {
@@ -307,6 +312,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: false,
             addedById: user1!.userId,
+            updatedById: user1!.userId,
             shares: {
               create: [
                 {
@@ -332,6 +338,7 @@ async function main() {
             expenseDate: new Date(),
             isSplitEqually: false,
             addedById: user5!.userId,
+            updatedById: user5!.userId,
             shares: {
               create: [
                 {

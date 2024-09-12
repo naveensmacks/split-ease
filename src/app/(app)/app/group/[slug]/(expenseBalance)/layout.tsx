@@ -17,7 +17,6 @@ export default async function Layout({
         <NavigationHeader
           backRoute={"/app/groups"}
           editRoute={`/app/group/${params.slug}/edit`}
-          useSettingSymbol={true}
         />
         <GroupInfoExpanded />
       </div>

@@ -31,12 +31,14 @@ export async function addExpense(
         group: { connect: { groupId: groupId } },
         paidByUser: { connect: { userId: paidById } },
         addedByUser: { connect: { userId: userId } },
+        updatedByUser: { connect: { userId: userId } },
         shares: { create: shares },
       },
       include: {
         group: true,
         addedByUser: true,
         paidByUser: true,
+        updatedByUser: true,
         shares: {
           include: {
             paidToUser: true,
@@ -50,6 +52,57 @@ export async function addExpense(
     return {
       isSuccess: false,
       message: "Could not create expense. Try again later.",
+    };
+  }
+}
+export async function editExpense(
+  expense: unknown,
+  userId: string,
+  expenseId: string
+) {
+  const validatedExpense = expenseSchema.safeParse(expense);
+  if (!validatedExpense.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedExpense.error.flatten().fieldErrors,
+    };
+  }
+  console.log("qexpenseIdq: ", expenseId);
+  //remove  validatedGroup.data.currencyType from validatedGroup.data
+  const { shares, paidById, ...data } = validatedExpense.data;
+
+  // Step 1: Delete existing shares for the expense
+  await prisma.share.deleteMany({
+    where: { expenseId: expenseId },
+  });
+  // Step 2: Update the expense and create new shares
+  try {
+    const expenseWithRelations = await prisma.expense.update({
+      where: { expenseId: expenseId },
+      data: {
+        ...data,
+        paidByUser: { connect: { userId: paidById } },
+        updatedByUser: { connect: { userId: userId } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        updatedByUser: true,
+        paidByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    console.log("error: ", error);
+    return {
+      isSuccess: false,
+      message: "Could not update expense. Try again later.",
     };
   }
 }
@@ -81,6 +134,8 @@ export async function addgroup(group: unknown, userId: string) {
         expenses: {
           include: {
             paidByUser: true,
+            addedByUser: true,
+            updatedByUser: true,
             shares: {
               include: {
                 paidToUser: true,
@@ -128,6 +183,8 @@ export async function editGroup(
         expenses: {
           include: {
             paidByUser: true,
+            addedByUser: true,
+            updatedByUser: true,
             shares: {
               include: {
                 paidToUser: true,
@@ -184,6 +241,8 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
           expenses: {
             include: {
               paidByUser: true,
+              addedByUser: true,
+              updatedByUser: true,
               shares: {
                 include: {
                   paidToUser: true,
@@ -224,6 +283,8 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
           expenses: {
             include: {
               paidByUser: true,
+              addedByUser: true,
+              updatedByUser: true,
               shares: {
                 include: {
                   paidToUser: true,

@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, GearIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, GearIcon, Pencil2Icon } from "@radix-ui/react-icons";
 import Link from "next/link";
 
 type NavigationHeaderProps = {
@@ -18,7 +18,7 @@ export default function NavigationHeader({
       </Link>
       <Link href={editRoute}>
         {useSettingSymbol && <GearIcon className="w-8 h-8" />}
-        {!useSettingSymbol && <Pencil1Icon className="w-7 h-7" />}
+        {!useSettingSymbol && <Pencil2Icon className="w-7 h-7" />}
       </Link>
     </div>
   );

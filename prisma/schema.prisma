@@ -16,21 +16,22 @@ datasource db {
 // prisma/schema.prisma
 
 model User {
-  userId          String    @id @default(uuid())
-  email           String?   @unique
-  hashedPassword  String?
-  firstName       String
-  lastName        String?
-  isRegistered    Boolean   @default(true)
-  groups          Group[]   @relation("UserGroups")
-  shares          Share[]
-  balancesOwed    Balance[] @relation("BalanceOwedBy")
-  balancesTo      Balance[] @relation("BalanceOwedTo")
-  updatedAt       DateTime  @updatedAt
-  createdAt       DateTime  @default(now())
-  groupsCreatedBy Group[]
-  expensesAddedBy Expense[] @relation("AddedByUser")
-  expensesPaidBy  Expense[] @relation("PaidByUser")
+  userId            String    @id @default(uuid())
+  email             String?   @unique
+  hashedPassword    String?
+  firstName         String
+  lastName          String?
+  isRegistered      Boolean   @default(true)
+  groups            Group[]   @relation("UserGroups")
+  shares            Share[]
+  balancesOwed      Balance[] @relation("BalanceOwedBy")
+  balancesTo        Balance[] @relation("BalanceOwedTo")
+  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime  @default(now())
+  groupsCreatedBy   Group[]
+  expensesAddedBy   Expense[] @relation("AddedByUser")
+  expensesPaidBy    Expense[] @relation("PaidByUser")
+  expensesUpdatedBy Expense[] @relation("UpdatedByUser")
 }
 
 model Group {
@@ -56,6 +57,7 @@ model Expense {
   expenseType        ExpenseType
   paidById           String
   addedById          String
+  updatedById        String
   expenseDescription String
   amount             Float
   expenseDate        DateTime
@@ -63,6 +65,7 @@ model Expense {
   group              Group       @relation(fields: [groupId], references: [groupId])
   paidByUser         User        @relation("PaidByUser", fields: [paidById], references: [userId])
   addedByUser        User        @relation("AddedByUser", fields: [addedById], references: [userId])
+  updatedByUser      User        @relation("UpdatedByUser", fields: [updatedById], references: [userId])
   shares             Share[]
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt

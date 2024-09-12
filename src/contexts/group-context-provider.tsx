@@ -3,6 +3,7 @@ import {
   addExpense,
   addgroup,
   addMemberToGroup,
+  editExpense,
   editGroup,
 } from "@/actions/actions";
 import {
@@ -39,6 +40,9 @@ type GroupContextType = {
   handleAddExpense: (
     newExpense: ExpenseEssential
   ) => ReturnType<typeof addExpense>;
+  handleEditExpense: (
+    updatedExpense: ExpenseEssential
+  ) => ReturnType<typeof editExpense>;
 };
 
 type GroupContextProviderProps = {
@@ -72,9 +76,7 @@ export default function GroupContextProvider({
   };
 
   const handleSelectedExpenseId = (expenseId: string) => {
-    if (!selectedGroupId) {
-      setSelectedExpenseId(expenseId);
-    }
+    setSelectedExpenseId(expenseId);
   };
   //expense form
   const handleAddExpense = async (newExpense: ExpenseEssential) => {
@@ -86,6 +88,34 @@ export default function GroupContextProvider({
             return {
               ...group,
               expenses: [...group.expenses, actionData.data],
+            };
+          }
+          return group;
+        })
+      );
+    }
+    return actionData;
+  };
+
+  const handleEditExpense = async (updatedExpense: ExpenseEssential) => {
+    console.log("selectedExpenseId: ", selectedExpenseId);
+    const actionData = await editExpense(
+      updatedExpense,
+      userId,
+      selectedExpenseId!
+    );
+    if (actionData.isSuccess && actionData.data) {
+      setGroupList((prev) =>
+        prev.map((group) => {
+          if (group.groupId === selectedGroupId) {
+            return {
+              ...group,
+              expenses: group.expenses.map((expense) => {
+                if (expense.expenseId === selectedExpenseId) {
+                  return actionData.data;
+                }
+                return expense;
+              }),
             };
           }
           return group;
@@ -182,6 +212,7 @@ export default function GroupContextProvider({
         handleSelectedExpenseId,
         getExpenseFromList,
         handleAddExpense,
+        handleEditExpense,
       }}
     >
       {children}

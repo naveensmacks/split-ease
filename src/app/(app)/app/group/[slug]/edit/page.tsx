@@ -15,6 +15,7 @@ export default function GroupEdit({ params }: GroupEditProps) {
       <NavigationHeader
         backRoute={`/app/group/${params.slug}/expenses`}
         editRoute={`/app/groups/create/${params.slug}/edit`}
+        useSettingSymbol={true}
       />
       <GroupInfo />
       <MemberList />

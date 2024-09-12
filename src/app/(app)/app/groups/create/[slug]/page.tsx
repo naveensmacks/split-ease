@@ -16,6 +16,7 @@ export default function GroupDetails({ params }: GroupMembersProps) {
       <NavigationHeader
         backRoute={`/app/groups/create/${params.slug}`}
         editRoute={`/app/group/${params.slug}/edit`}
+        useSettingSymbol={true}
       />
       <GroupInfo />
       <MemberList />

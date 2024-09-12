@@ -3,22 +3,19 @@ import { useGroupContext } from "@/lib/hooks";
 import { useEffect } from "react";
 
 type ExpenseDetailsWrapperProps = {
-  groupId: string;
   expenseId: string;
   children: React.ReactNode;
 };
 
 export default function ExpenseDetailsWrapper({
-  groupId,
   expenseId,
   children,
 }: ExpenseDetailsWrapperProps) {
-  const { handleChangeSelectedGroupId, handleSelectedExpenseId } =
-    useGroupContext();
+  console.log("expenseIdy: ", expenseId);
+  const { handleSelectedExpenseId } = useGroupContext();
 
   useEffect(() => {
-    handleChangeSelectedGroupId(groupId);
     handleSelectedExpenseId(expenseId);
-  }, [handleChangeSelectedGroupId, handleSelectedExpenseId]);
+  }, [handleSelectedExpenseId, expenseId]);
   return <div>{children}</div>;
 }
