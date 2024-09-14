@@ -19,6 +19,7 @@ export type ExpenseWithRelations = Expense & {
 export type GroupWithRelations = Group & {
   users: User[];
   expenses: ExpenseWithRelations[];
+  balance?: BalanceView[];
 };
 
 export type MemberEssential = Omit<
@@ -37,3 +38,14 @@ export type ExpenseEssential = { shares: ShareEssential[] } & Omit<
 >;
 
 type ShareEssential = Omit<Share, "shareId" | "expenseId" | "paidToUserId">;
+
+export type BalanceView = {
+  user: User;
+  amount: number;
+};
+
+export type OptimizedTransaction = {
+  sender: User;
+  receiver: User;
+  amount: number;
+};

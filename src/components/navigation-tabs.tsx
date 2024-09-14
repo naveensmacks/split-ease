@@ -3,8 +3,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Button } from "./ui/button";
-import { PlusIcon } from "@radix-ui/react-icons";
 import AddExpenseButton from "./add-expense-btn";
 
 type NavigationTabsProps = {
@@ -13,6 +11,7 @@ type NavigationTabsProps = {
 export default function NavigationTabs({ groupId }: NavigationTabsProps) {
   const activePathname = usePathname();
   const isExpensesPage = activePathname?.includes("expenses");
+  console.log("activePathname: ", activePathname);
   return (
     <div className="sticky h-11 top-0 flex bg-primecolor justify-between sm:justify-start sm:gap-16 items-center text-black border-t border-white/10">
       <div

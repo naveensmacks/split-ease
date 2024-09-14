@@ -21,6 +21,16 @@ export default function ExpenseDetailsView({
   const [viewAdditionalInfo, setViewAdditionalInfo] = useState(false);
 
   const currencyType = selectedGroup?.currencyType;
+  function getNoOfParticipants() {
+    return (
+      expense &&
+      expense.shares &&
+      expense.shares.reduce((prevval, share) => {
+        let involved = share.amount ? 1 : 0;
+        return prevval + involved;
+      }, 0)
+    );
+  }
   return (
     <>
       {selectedGroup && expense && (
@@ -67,7 +77,8 @@ export default function ExpenseDetailsView({
 
           <div className="flex flex-col p-2 sm:mt-4 sm:p-0 text-black ">
             <H1 className="text-xl sm:text-2xl">
-              {expense.shares.length} Participants
+              {getNoOfParticipants()} Participant
+              {(getNoOfParticipants() ?? 0) > 1 ? "s" : ""}
             </H1>
             {!viewAdditionalInfo && (
               <button

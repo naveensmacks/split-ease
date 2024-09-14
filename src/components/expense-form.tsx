@@ -501,7 +501,12 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
             </div>
           ))}
       </div>
-      <Button className="rounded-lg mx-auto w-1/2" type="submit">
+      <Button
+        className="rounded-lg mx-auto w-1/2"
+        type="submit"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Adding Expense..." : "Save"}
         Save
       </Button>
     </form>

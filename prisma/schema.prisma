@@ -24,8 +24,7 @@ model User {
   isRegistered      Boolean   @default(true)
   groups            Group[]   @relation("UserGroups")
   shares            Share[]
-  balancesOwed      Balance[] @relation("BalanceOwedBy")
-  balancesTo        Balance[] @relation("BalanceOwedTo")
+  balances          Balance[]
   updatedAt         DateTime  @updatedAt
   createdAt         DateTime  @default(now())
   groupsCreatedBy   Group[]
@@ -81,16 +80,24 @@ model Share {
   paidToUser User    @relation(fields: [paidToId], references: [userId])
 }
 
+// model Balance {
+//   balanceId  String  @id @default(uuid())
+//   groupId    String
+//   owedToId   String
+//   owedById   String
+//   amount     Float
+//   settled    Boolean
+//   group      Group   @relation(fields: [groupId], references: [groupId])
+//   owedToUser User    @relation("BalanceOwedTo", fields: [owedToId], references: [userId])
+//   owedByUser User    @relation("BalanceOwedBy", fields: [owedById], references: [userId])
+// }
 model Balance {
-  balanceId  String  @id @default(uuid())
-  groupId    String
-  owedToId   String
-  owedById   String
-  amount     Float
-  settled    Boolean
-  group      Group   @relation(fields: [groupId], references: [groupId])
-  owedToUser User    @relation("BalanceOwedTo", fields: [owedToId], references: [userId])
-  owedByUser User    @relation("BalanceOwedBy", fields: [owedById], references: [userId])
+  balanceId String @id @default(uuid())
+  groupId   String
+  userId    String
+  amount    Float
+  group     Group  @relation(fields: [groupId], references: [groupId])
+  user      User   @relation(fields: [userId], references: [userId])
 }
 
 model Currency {

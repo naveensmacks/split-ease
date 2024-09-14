@@ -115,9 +115,9 @@ async function main() {
             expenseType: "FOOD",
             paidById: user1!.userId,
             expenseDescription: "Dinner at Eiffel Tower",
-            amount: 7000,
+            amount: 3000,
             expenseDate: new Date(),
-            isSplitEqually: true,
+            isSplitEqually: false,
             addedById: user1!.userId,
             updatedById: user1!.userId,
             shares: {
@@ -152,19 +152,19 @@ async function main() {
             shares: {
               create: [
                 {
-                  share: 1500,
+                  share: 1,
                   paidToId: user1!.userId,
                   amount: 1500,
                 },
                 {
-                  share: 1500,
+                  share: 0,
                   paidToId: user3!.userId,
-                  amount: 150,
+                  amount: 1000,
                 },
                 {
-                  share: 1000,
+                  share: 1,
                   paidToId: user4!.userId,
-                  amount: 1000,
+                  amount: 1500,
                 },
               ],
             },
@@ -258,7 +258,12 @@ async function main() {
       splitEase: true,
       createdBy: { connect: { userId: user4!.userId } },
       users: {
-        connect: [{ userId: user4!.userId }, { userId: user5!.userId }],
+        connect: [
+          { userId: user1!.userId },
+          { userId: user3!.userId },
+          { userId: user4!.userId },
+          { userId: user5!.userId },
+        ],
       },
       expenses: {
         create: [
@@ -300,6 +305,7 @@ async function main() {
           { userId: user5!.userId },
           { userId: user3!.userId },
           { userId: user4!.userId },
+          { userId: user2!.userId },
         ],
       },
       expenses: {

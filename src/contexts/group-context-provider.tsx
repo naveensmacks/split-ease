@@ -12,9 +12,10 @@ import {
   GroupEssential,
   GroupWithRelations,
 } from "@/lib/types";
+import { calculateBalances } from "@/lib/utils";
 import { TGroupForm, TMemberForm } from "@/lib/validation";
 import { Group, User } from "@prisma/client";
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 export const GroupContext = createContext<GroupContextType | null>(null);
 
@@ -43,6 +44,7 @@ type GroupContextType = {
   handleEditExpense: (
     updatedExpense: ExpenseEssential
   ) => ReturnType<typeof editExpense>;
+  userId: string;
 };
 
 type GroupContextProviderProps = {
@@ -57,6 +59,7 @@ export default function GroupContextProvider({
   children,
 }: GroupContextProviderProps) {
   const [groupList, setGroupList] = useState<GroupWithRelations[]>(data);
+
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(
     null
@@ -85,9 +88,13 @@ export default function GroupContextProvider({
       setGroupList((prev) =>
         prev.map((group) => {
           if (group.groupId === selectedGroupId) {
-            return {
+            const updatedGroup = {
               ...group,
               expenses: [...group.expenses, actionData.data],
+            };
+            return {
+              ...updatedGroup,
+              balance: calculateBalances(group),
             };
           }
           return group;
@@ -108,7 +115,7 @@ export default function GroupContextProvider({
       setGroupList((prev) =>
         prev.map((group) => {
           if (group.groupId === selectedGroupId) {
-            return {
+            const updatedGroup = {
               ...group,
               expenses: group.expenses.map((expense) => {
                 if (expense.expenseId === selectedExpenseId) {
@@ -116,6 +123,10 @@ export default function GroupContextProvider({
                 }
                 return expense;
               }),
+            };
+            return {
+              ...updatedGroup,
+              balance: calculateBalances(group),
             };
           }
           return group;
@@ -131,7 +142,15 @@ export default function GroupContextProvider({
 
     if (actionData.isSuccess && actionData.data) {
       setGroupList((prev) =>
-        prev ? [...prev, actionData.data] : [actionData.data]
+        prev
+          ? [
+              ...prev,
+              {
+                ...actionData.data,
+                balance: calculateBalances(actionData.data),
+              },
+            ]
+          : [actionData.data]
       );
     }
     return actionData;
@@ -148,7 +167,7 @@ export default function GroupContextProvider({
         prev
           ? prev.map((group) => {
               if (group.groupId === groupId) {
-                return actionData.data;
+                return { ...group, ...actionData.data };
               }
               return group;
             })
@@ -177,7 +196,10 @@ export default function GroupContextProvider({
     setGroupList((prev) => {
       return prev
         ? [
-            editedGroup,
+            {
+              ...prev.find((group) => group.groupId === groupId),
+              ...editedGroup,
+            },
             //remove the group with group ID from the list
             ...prev.filter((group) => group.groupId !== groupId),
           ]
@@ -196,6 +218,16 @@ export default function GroupContextProvider({
     return actionData;
   };
 
+  useEffect(() => {
+    //set Balances
+    const updatedGroupList = groupList.map((group) => ({
+      ...group,
+      balance: calculateBalances(group),
+    }));
+
+    setGroupList(updatedGroupList);
+  }, []);
+
   return (
     <GroupContext.Provider
       value={{
@@ -213,6 +245,7 @@ export default function GroupContextProvider({
         getExpenseFromList,
         handleAddExpense,
         handleEditExpense,
+        userId,
       }}
     >
       {children}
