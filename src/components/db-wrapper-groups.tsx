@@ -6,7 +6,6 @@ export default async function DBFetchWrapperGroups({
   children: React.ReactNode;
 }) {
   const user = await getUserByEmail("user4@example.com");
-  console.log("user: ", user);
   const userId = user!.userId;
   const groups = await getGroupsByUserId(userId);
   return (

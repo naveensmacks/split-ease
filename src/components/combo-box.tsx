@@ -31,12 +31,14 @@ export function ComboBox<TFieldValues extends FieldValues>({
   label,
   field,
   setValue,
+  className,
 }: {
   list: { value: string; label: string }[];
   type: Path<TFieldValues>;
   label: string;
   field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>;
   setValue: UseFormSetValue<TFieldValues>;
+  className?: string;
 }) {
   const popularCurrencies = [
     {
@@ -73,6 +75,7 @@ export function ComboBox<TFieldValues extends FieldValues>({
               );
               setOpen(false);
             }}
+            keywords={[item.label]}
           >
             {item.label}
             <CheckIcon
@@ -83,7 +86,6 @@ export function ComboBox<TFieldValues extends FieldValues>({
             />
           </CommandItem>
         ))}
-        <span className="text-zinc-500 px-1">Others</span>
       </div>
     );
   };
@@ -95,23 +97,35 @@ export function ComboBox<TFieldValues extends FieldValues>({
           <Button
             variant="outline"
             role="combobox"
-            className="w-full justify-between rounded-md opacity-80"
+            className={cn(
+              "w-full justify-between rounded-md opacity-80",
+              className
+            )}
           >
             {field.value ? (
-              list.find((item) => item.value === field.value) ? (
-                list.find((item) => item.value === field.value)?.label
-              ) : (
-                popularCurrencies.find((item) => item.value === field.value)
-                  ?.label
-              )
+              <span className="truncate">
+                {list.find((item) => item.value === field.value)
+                  ? list.find((item) => item.value === field.value)?.label
+                  : popularCurrencies.find((item) => item.value === field.value)
+                      ?.label}
+              </span>
             ) : (
               <span className="opacity-60">{`Select ${label}...`}</span>
             )}
+
             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-min-full p-0">
-          <Command>
+          <Command
+            filter={(_, search, keywords) => {
+              const labelValue = keywords?.join(" ");
+              if (labelValue?.toLowerCase().includes(search.toLowerCase())) {
+                return 1;
+              }
+              return 0;
+            }}
+          >
             <CommandInput placeholder={`Search ${label}...`} className="h-9" />
             <CommandList>
               <CommandEmpty>{`No ${label} found.`}</CommandEmpty>
@@ -119,6 +133,9 @@ export function ComboBox<TFieldValues extends FieldValues>({
                 <CommandGroup>{getPopularCurrencies()}</CommandGroup>
               )}
               <CommandGroup>
+                {type === "currencyType" && (
+                  <span className="text-zinc-500 px-1">Others</span>
+                )}
                 {list.map((item) => (
                   <CommandItem
                     key={item.value}
@@ -133,6 +150,7 @@ export function ComboBox<TFieldValues extends FieldValues>({
                       );
                       setOpen(false);
                     }}
+                    keywords={[item.label]}
                   >
                     {item.label}
                     <CheckIcon

@@ -507,7 +507,6 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
         disabled={isSubmitting}
       >
         {isSubmitting ? "Adding Expense..." : "Save"}
-        Save
       </Button>
     </form>
   );

@@ -35,7 +35,7 @@ export default function ExpenseDetailsView({
     <>
       {selectedGroup && expense && (
         <>
-          <div className="flex p-2 sm:p-0 items-center gap-4">
+          <div className="flex p-2 sm:p-0 items-center">
             <div className="flex flex-col text-white gap-2 sm:gap-3 w-10/12">
               {/*TODO: symbol of the expense type should be shown here */}
               <div className="text-white/70">{expense.expenseType}</div>
@@ -47,19 +47,22 @@ export default function ExpenseDetailsView({
                 {expense.amount.toString() + " " + currencyType}
               </div>
 
-              <div className="flex  text-white/70 justify-start items-center gap-2">
+              <div className="flex  text-white/70 items-center gap-2">
                 <DisplayInitials
                   firstName={expense.paidByUser.firstName}
                   lastName={expense.paidByUser.lastName}
                   className="bg-black/50"
                 />
-                <div>
-                  {"Paid by " +
-                    expense.paidByUser.firstName +
-                    " " +
-                    expense.paidByUser.lastName +
-                    " on " +
-                    formatDate(new Date(expense.expenseDate))}
+                <div className="flex flex-col">
+                  <div className="flex">
+                    <span className="min-w-[60px]">Paid by&nbsp;</span>
+                    <span className="truncate max-w-[180px] sm:max-w-[300px]">
+                      {expense.paidByUser.firstName +
+                        " " +
+                        expense.paidByUser.lastName}
+                    </span>
+                  </div>
+                  {"on " + formatDate(new Date(expense.expenseDate))}
                 </div>
               </div>
             </div>

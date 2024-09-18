@@ -1,14 +1,14 @@
 import GroupDetailsWrapper from "@/components/group-details-wrapper";
 
-type ExpenseLayoutProps = {
+type BalanceLayoutProps = {
   params: { slug: string; expenseId: string };
   children: React.ReactNode;
 };
 
-export default async function ExpenseLayout({
+export default async function BalanceLayout({
   params,
   children,
-}: ExpenseLayoutProps) {
+}: BalanceLayoutProps) {
   return (
     <GroupDetailsWrapper groupId={params.slug}>{children}</GroupDetailsWrapper>
   );

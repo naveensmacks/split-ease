@@ -42,10 +42,15 @@ type ShareEssential = Omit<Share, "shareId" | "expenseId" | "paidToUserId">;
 export type BalanceView = {
   user: User;
   amount: number;
+  transactors?: Transactor[];
 };
 
+export type Transactor = {
+  amount: number;
+  user: User;
+};
 export type OptimizedTransaction = {
-  sender: User;
-  receiver: User;
+  ower: User;
+  owed: User;
   amount: number;
 };

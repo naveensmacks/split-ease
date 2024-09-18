@@ -25,7 +25,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
             <Link
               href={`/app/group/${params.slug}/expenses/${item.expenseId}`}
               key={item.expenseId}
-              className="flex px-5 py-5 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
+              className="flex px-4 py-5 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
             >
               <DisplayInitials
                 firstName={item.paidByUser.firstName}
@@ -33,9 +33,11 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               />
               <div className="flex flex-col grow mx-3">
                 <div>{item.expenseDescription}</div>
-                <div className="text-black/50">
-                  Paid by{" "}
-                  {item.paidByUser.firstName + " " + item.paidByUser.lastName}
+                <div className="text-black/50 flex">
+                  <span className="min-w-[60px]">Paid by&nbsp;</span>
+                  <span className="truncate max-w-[180px] sm:max-w-[200px]">
+                    {item.paidByUser.firstName + " " + item.paidByUser.lastName}
+                  </span>
                 </div>
               </div>
               <div className="text-black/50 text-sm">
