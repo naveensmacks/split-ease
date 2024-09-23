@@ -94,7 +94,7 @@ export default function GroupContextProvider({
             };
             return {
               ...updatedGroup,
-              balance: calculateBalances(group),
+              balance: calculateBalances(updatedGroup),
             };
           }
           return group;
@@ -126,7 +126,7 @@ export default function GroupContextProvider({
             };
             return {
               ...updatedGroup,
-              balance: calculateBalances(group),
+              balance: calculateBalances(updatedGroup),
             };
           }
           return group;
