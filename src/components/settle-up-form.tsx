@@ -207,7 +207,7 @@ export default function SettleUpForm({
         <Input
           id="settleUpDescription"
           {...register("settleUpDescription")}
-          placeholder="e.g. Dinner with friends"
+          placeholder="e.g. Paid through cash"
         />
         {errors.settleUpDescription && (
           <p className="text-red-500/85">

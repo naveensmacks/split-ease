@@ -220,12 +220,14 @@ export default function GroupContextProvider({
 
   useEffect(() => {
     //set Balances
-    const updatedGroupList = groupList.map((group) => ({
-      ...group,
-      balance: calculateBalances(group),
-    }));
+    const updatedGroupList = (prevList: GroupWithRelations[]) => {
+      return prevList.map((group) => ({
+        ...group,
+        balance: calculateBalances(group),
+      }));
+    };
 
-    setGroupList(updatedGroupList);
+    setGroupList((prev) => updatedGroupList(prev));
   }, []);
 
   return (
