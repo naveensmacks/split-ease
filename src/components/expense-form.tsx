@@ -33,7 +33,6 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
   } = useGroupContext();
   const router = useRouter();
   let expenseinfo: ExpenseWithRelations | null = null;
-  console.log(isEditing, selectedExpenseId, selectedGroup);
   if (isEditing && selectedExpenseId) {
     expenseinfo = getExpenseFromList(selectedExpenseId);
     console.log("expenseinfo: ", expenseinfo);
@@ -177,15 +176,8 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
 
   const recalculateShares = (
     shares = [...watch("shares")],
-    totalAmount?: string
+    totalAmountDec = new Decimal(watch("amount") ? watch("amount") : 0)
   ) => {
-    let totalAmountDec;
-    if (totalAmount) {
-      totalAmountDec = new Decimal(totalAmount);
-    } else {
-      totalAmountDec = new Decimal(watch("amount"));
-    }
-    //console.log("totalAmountDec: ", totalAmountDec.toNumber());
     const isSplitEqually = watch("isSplitEqually");
     let unEqualShareAmounts = new Decimal(0);
     if (!isSplitEqually) {
@@ -200,7 +192,6 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
       (prevValue, share) => prevValue + share.share,
       0
     );
-    //console.log("totalShares: ", totalShares);
     // Distribute amounts and round to 2 decimal places
     let i = 0;
     const newShares = shares.map((share) => {
@@ -242,9 +233,15 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
   };
 
   const splitEqually = () => {
+    const amount = watch("amount");
+    let totalAmount = new Decimal(0);
+    if (amount) {
+      totalAmount = new Decimal(amount);
+    }
     const shares = watch("shares");
-    const totalAmount = new Decimal(watch("amount"));
+
     const eachAmount = totalAmount.dividedBy(shares.length).toDecimalPlaces(2);
+    console.log("eachAmount: ", eachAmount.toNumber());
     const distributedShares = shares.map((share) => ({
       ...share,
       share: 1,
@@ -265,6 +262,13 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     }
 
     setValue("shares", distributedShares);
+  };
+
+  const splitUnEqually = () => {
+    const shares = watch("shares");
+    const amount = watch("amount");
+    if (!amount) {
+    }
   };
 
   const noOfMembersInvolved = () => {
@@ -305,8 +309,6 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
       }
     }
   };
-
-  console.log("errors: ", errors);
 
   return (
     <form
@@ -354,7 +356,10 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
             step={0.01}
             placeholder="0.00"
             onChange={(e) => {
-              recalculateShares(undefined, e.target.value);
+              const amt = e.target.value
+                ? new Decimal(e.target.value)
+                : new Decimal(0);
+              recalculateShares(undefined, amt);
             }}
           />
           <span className="text-black/50">{selectedGroup?.currencyType}</span>

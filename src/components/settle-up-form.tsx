@@ -3,16 +3,12 @@ import { useGroupContext } from "@/lib/hooks";
 import React, { useMemo } from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { settleUpFormSchema, TSettleUpForm } from "@/lib/validation";
 import DisplayInitials from "./display-initials";
-import {
-  DoubleArrowRightIcon,
-  ThickArrowRightIcon,
-} from "@radix-ui/react-icons";
+import { ThickArrowRightIcon } from "@radix-ui/react-icons";
 import { ComboBox } from "./combo-box";
 import { DatePicker } from "./date-picker";
 import { Button } from "./ui/button";
@@ -96,17 +92,7 @@ export default function SettleUpForm({
 
         onFormSubmission();
 
-        // /*const petData = {
-        //   name: formData.get("name") as string,
-        //   ownerName: formData.get("ownerName") as string,
-        //   imageUrl:
-        //     (formData.get("imageUrl") as string) ||
-        //     "https://bytegrad.com/course-assets/react-nextjs/pet-placeholder.png",
-        //   age: +(formData.get("age") as string),
-        //   notes: formData.get("notes") as string,
-        // };*/
-
-        // const petData = getValues();
+        const petData = getValues();
         // petData.imageUrl = petData.imageUrl || DEFAULT_PET_IMAGE;
         // if (isEditing) {
         //   await handleEditPet(selectedPet!.id, petData);
@@ -144,6 +130,7 @@ export default function SettleUpForm({
                 label="payer"
                 field={field}
                 setValue={setValue}
+                className="text-xs"
               />
             )}
           ></Controller>
@@ -163,6 +150,7 @@ export default function SettleUpForm({
                 label="recepient"
                 field={field}
                 setValue={setValue}
+                className="text-xs"
               />
             )}
           ></Controller>
