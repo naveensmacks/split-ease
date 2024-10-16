@@ -3,12 +3,12 @@ import { Path, UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import {
   BalanceView,
-  ExpenseWithRelations,
   GroupWithRelations,
   OptimizedTransaction,
   Transactor,
 } from "./types";
 import { User } from "@prisma/client";
+import Decimal from "decimal.js";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -63,10 +63,10 @@ export function calculateOptimizedTransactions(
 ): OptimizedTransaction[] {
   const expenses = group.expenses;
   // Store balances in a Map of the form: { 'senderId:receiverId': balance }
-  const balanceMap = new Map<string, number>();
+  const balanceMap = new Map<string, Decimal>();
 
   // Helper function to update balance between two users
-  function updateBalance(paidByUser: User, paidToUser: User, amount: number) {
+  function updateBalance(paidByUser: User, paidToUser: User, amount: Decimal) {
     if (paidByUser.userId === paidToUser.userId) return; // Skip if sender and receiver are the same
 
     const key = `${paidByUser.userId}:${paidToUser.userId}`;
@@ -76,20 +76,20 @@ export function calculateOptimizedTransactions(
     if (balanceMap.has(reverseKey)) {
       const reverseBalance = balanceMap.get(reverseKey)!;
 
-      if (reverseBalance > amount) {
+      if (reverseBalance.greaterThan(amount)) {
         // Reduce reverse balance
-        balanceMap.set(reverseKey, reverseBalance - amount);
-      } else if (reverseBalance < amount) {
+        balanceMap.set(reverseKey, reverseBalance.minus(amount));
+      } else if (reverseBalance.lessThan(amount)) {
         // Remove reverse balance and set new balance in correct direction
         balanceMap.delete(reverseKey);
-        balanceMap.set(key, amount - reverseBalance);
+        balanceMap.set(key, amount.minus(reverseBalance));
       } else {
         // If amounts are equal, both balances are settled
         balanceMap.delete(reverseKey);
       }
     } else {
       // Add or update the balance in the correct direction
-      balanceMap.set(key, (balanceMap.get(key) || 0) + amount);
+      balanceMap.set(key, (balanceMap.get(key) || new Decimal(0)).plus(amount));
     }
   }
 
@@ -98,7 +98,7 @@ export function calculateOptimizedTransactions(
     const { paidByUser, shares } = expense;
     shares.forEach((share) => {
       if (share.amount > 0)
-        updateBalance(paidByUser, share.paidToUser, share.amount);
+        updateBalance(paidByUser, share.paidToUser, new Decimal(share.amount));
     });
   });
 
@@ -110,7 +110,7 @@ export function calculateOptimizedTransactions(
     const owed = group.users.find((user) => user.userId === owedId);
     const ower = group.users.find((user) => user.userId === owerId);
     if (ower && owed) {
-      result.push({ ower, owed, amount });
+      result.push({ ower, owed, amount: Number(amount) });
     }
   });
 
@@ -119,6 +119,7 @@ export function calculateOptimizedTransactions(
 
 export function calculateBalances(group: GroupWithRelations) {
   const optimizedTransactions = calculateOptimizedTransactions(group);
+  console.log("GroupName: ", group.groupName);
   console.log("optimizedTransactions: ", optimizedTransactions);
 
   const balances: BalanceView[] = [];
@@ -129,7 +130,13 @@ export function calculateBalances(group: GroupWithRelations) {
     const received = optimizedTransactions
       .filter((transaction) => transaction.ower.userId === user.userId)
       .reduce((sum, transaction) => sum + transaction.amount, 0);
-    balances.push({ user, amount: sent - received });
+    balances.push({
+      user,
+      amount: new Decimal(sent)
+        .minus(new Decimal(received))
+        .toDecimalPlaces(2)
+        .toNumber(),
+    });
   });
   //sort balance from high amount to low amount
   balances.sort((a, b) => b.amount - a.amount);
@@ -225,6 +232,11 @@ function minimizedTransactions(balance: BalanceView[] | undefined) {
     if (owed.amount === 0) reReceivers.pop();
   }
 
+  transactions.forEach((transaction) => {
+    transaction.amount = new Decimal(transaction.amount)
+      .toDecimalPlaces(2)
+      .toNumber();
+  });
   return transactions;
 }
 
