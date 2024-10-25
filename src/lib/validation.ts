@@ -85,6 +85,8 @@ export const expenseSchema = z
         ExpenseType.UTILITIES,
         ExpenseType.MOVIE,
         ExpenseType.OTHER,
+        ExpenseType.SHOPPING,
+        ExpenseType.PAYMENT,
       ],
       {
         message: "Expense Type is required.",
@@ -141,31 +143,43 @@ export const expenseSchema = z
 
 export type TExpenseForm = z.infer<typeof expenseSchema>;
 
-export const settleUpFormSchema = z.object({
-  settleUpDate: z.date({
-    required_error: "Settle up date is required.",
-  }),
-  settleUpDescription: z
-    .string()
-    .max(100, "Settle up description can't be longer than 100 characters")
-    .nullable()
-    .optional(),
-  amount: z.preprocess(
-    (val) => parseFloat(val as string),
-    z
-      .number({ message: "Amount is required" })
-      .positive("Amount must be a positive number")
-  ),
-  payerId: z
-    .string({
-      required_error: "Please select who paid.",
-    })
-    .min(1, "Please select who paid."),
-  recepientId: z
-    .string({
-      required_error: "Please select who received.",
-    })
-    .min(1, "Please select who received."),
-});
+export const settleUpFormSchema = z
+  .object({
+    settleUpDate: z.date({
+      required_error: "Settle up date is required.",
+    }),
+    settleUpDescription: z
+      .string()
+      .max(100, "Settle up description can't be longer than 100 characters")
+      .nullable()
+      .optional(),
+    amount: z.preprocess(
+      (val) => parseFloat(val as string),
+      z
+        .number({ message: "Amount is required" })
+        .positive("Amount must be a positive number")
+    ),
+    payerId: z
+      .string({
+        required_error: "Please select who paid.",
+      })
+      .min(1, "Please select who paid."),
+    recepientId: z
+      .string({
+        required_error: "Please select who received.",
+      })
+      .min(1, "Please select who received."),
+  })
+  .refine(
+    (data) => {
+      // Custom validation to check if sender and receiver are not same
+
+      return data.payerId !== data.recepientId;
+    },
+    {
+      path: ["payerId"],
+      message: "Payer and receiver can't be same",
+    }
+  );
 
 export type TSettleUpForm = z.infer<typeof settleUpFormSchema>;

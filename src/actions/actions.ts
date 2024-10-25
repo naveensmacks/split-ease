@@ -6,9 +6,141 @@ import {
   expenseSchema,
   groupFormSchema,
   memberFormSchema,
+  settleUpFormSchema,
+  TExpenseForm,
 } from "@/lib/validation";
+import { ExpenseType } from "@prisma/client";
 //--- Expense actions ---
+export async function editPayment(
+  expenseId: string,
+  userId: string,
+  updatedPayment: unknown
+) {
+  const validatedPayment = settleUpFormSchema.safeParse(updatedPayment);
+  if (!validatedPayment.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedPayment.error.flatten().fieldErrors,
+    };
+  }
 
+  const shares = [
+    {
+      paidToId: validatedPayment.data.recepientId,
+      amount: validatedPayment.data.amount,
+      share: 0.0,
+    },
+  ];
+
+  const updatedData = {
+    amount: validatedPayment.data.amount,
+    expenseType: ExpenseType.PAYMENT,
+    expenseDate: validatedPayment.data.settleUpDate,
+    expenseDescription: validatedPayment.data.settleUpDescription
+      ? validatedPayment.data.settleUpDescription
+      : "SettleUp Payment",
+    isSplitEqually: false,
+  };
+
+  //database mutation
+  // Step 1: Delete existing shares for the expense
+  await prisma.share.deleteMany({
+    where: { expenseId: expenseId },
+  });
+  // Step 2: Update the expense and create new shares
+  try {
+    const expenseWithRelations = await prisma.expense.update({
+      where: { expenseId: expenseId },
+      data: {
+        ...updatedData,
+        paidByUser: { connect: { userId: validatedPayment.data.payerId } },
+        updatedByUser: { connect: { userId: userId } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        updatedByUser: true,
+        paidByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      error: error,
+    };
+  }
+}
+export async function addPayment(
+  newPayment: unknown,
+  userId: string,
+  groupId: string
+) {
+  const validatedPayment = settleUpFormSchema.safeParse(newPayment);
+  if (!validatedPayment.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedPayment.error.flatten().fieldErrors,
+    };
+  }
+
+  //form or create an expense data from validatedPayment
+  let expenseData: TExpenseForm = {
+    expenseType: ExpenseType.PAYMENT,
+    amount: validatedPayment.data.amount,
+    expenseDescription: validatedPayment.data.settleUpDescription
+      ? validatedPayment.data.settleUpDescription
+      : "SettleUp Payment",
+    expenseDate: validatedPayment.data.settleUpDate,
+    paidById: validatedPayment.data.payerId,
+    isSplitEqually: false,
+    shares: [
+      {
+        paidToId: validatedPayment.data.recepientId,
+        amount: validatedPayment.data.amount,
+        share: 0.0,
+      },
+    ],
+  };
+
+  const { shares, paidById, ...data } = expenseData;
+  try {
+    const expenseWithRelations = await prisma.expense.create({
+      data: {
+        ...data,
+        group: { connect: { groupId: groupId } },
+        paidByUser: { connect: { userId: paidById } },
+        addedByUser: { connect: { userId: userId } },
+        updatedByUser: { connect: { userId: userId } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        paidByUser: true,
+        updatedByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    console.log("error: ", error);
+    return {
+      isSuccess: false,
+      message: "Could not create payment. Try again later.",
+    };
+  }
+}
 export async function addExpense(
   expense: unknown,
   userId: string,
@@ -76,6 +208,7 @@ export async function editExpense(
     where: { expenseId: expenseId },
   });
   // Step 2: Update the expense and create new shares
+
   try {
     const expenseWithRelations = await prisma.expense.update({
       where: { expenseId: expenseId },

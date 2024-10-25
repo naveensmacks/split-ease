@@ -1,4 +1,3 @@
-"use client";
 import { useGroupContext } from "@/lib/hooks";
 import { formatDate, extractInitials } from "@/lib/utils";
 import { InfoCircledIcon, Pencil2Icon } from "@radix-ui/react-icons";
@@ -7,6 +6,8 @@ import React, { useState } from "react";
 import H1 from "./h1";
 import { Button } from "./ui/button";
 import DisplayInitials from "./display-initials";
+import { ExpenseType } from "@prisma/client";
+import SettleUpBtn from "./settle-up-btn";
 
 type ExpenseDetailsViewProps = {
   groupId: string;
@@ -67,14 +68,31 @@ export default function ExpenseDetailsView({
               </div>
             </div>
             <div className="hidden sm:block">
-              <Button className="state-effects opacity-90 w-[100%]" asChild>
-                <Link
-                  href={`/app/group/${selectedGroup.groupId}/expenses/${expense.expenseId}/edit`}
+              {expense?.expenseType !== ExpenseType.PAYMENT && (
+                <Button className="state-effects opacity-90 w-[100%]" asChild>
+                  <Link
+                    href={`/app/group/${selectedGroup.groupId}/expenses/${expense.expenseId}/edit`}
+                  >
+                    <Pencil2Icon />
+                    <span className="ml-1">Edit</span>
+                  </Link>
+                </Button>
+              )}
+              {expense?.expenseType === ExpenseType.PAYMENT && (
+                <SettleUpBtn
+                  actionType="edit"
+                  payerId={expense?.paidById}
+                  recepientId={expense?.shares[0].paidToId}
+                  amount={expense?.amount}
+                  settleUpDescription={expense?.expenseDescription}
+                  settleUpDate={expense?.expenseDate}
                 >
-                  <Pencil2Icon />
-                  <span className="ml-1">Edit</span>
-                </Link>
-              </Button>
+                  <Button className="state-effects opacity-90 w-[100%] p-4">
+                    <Pencil2Icon />
+                    <span className="ml-1">Edit</span>
+                  </Button>
+                </SettleUpBtn>
+              )}
             </div>
           </div>
 
@@ -94,7 +112,7 @@ export default function ExpenseDetailsView({
             )}
             {viewAdditionalInfo && (
               <div
-                className="text-black text-sm mb-2"
+                className="text-black/50 text-sm mb-2"
                 onClick={() => setViewAdditionalInfo((prev) => !prev)}
               >
                 <div>
@@ -112,36 +130,34 @@ export default function ExpenseDetailsView({
             <div className="text-black/70 flex flex-col gap-4 mt-3 w-full">
               {expense.shares.map((share) => {
                 return (
-                  <>
-                    {Boolean(share.amount) && (
-                      <div
-                        key={share.shareId}
-                        className="flex justify-between w-full"
-                      >
-                        <div className="flex justify-start items-center gap-2 w-8/12">
-                          <DisplayInitials
-                            firstName={share.paidToUser.firstName}
-                            lastName={share.paidToUser.lastName}
-                          />
-                          <div className="truncate w-[80%]">
-                            {share.paidToUser.firstName +
-                              " " +
-                              share.paidToUser.lastName}
-                          </div>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          {Boolean(share.share) && (
-                            <div className="text-black/50">
-                              {share.share + "x"}
-                            </div>
-                          )}
-                          <div className="text-orange-400">
-                            {share.amount.toString() + " " + currencyType}
-                          </div>
+                  Boolean(share.amount) && (
+                    <div
+                      key={share.shareId}
+                      className="flex justify-between w-full"
+                    >
+                      <div className="flex justify-start items-center gap-2 w-8/12">
+                        <DisplayInitials
+                          firstName={share.paidToUser.firstName}
+                          lastName={share.paidToUser.lastName}
+                        />
+                        <div className="truncate w-[80%]">
+                          {share.paidToUser.firstName +
+                            " " +
+                            share.paidToUser.lastName}
                         </div>
                       </div>
-                    )}
-                  </>
+                      <div className="flex gap-2 items-center">
+                        {Boolean(share.share) && (
+                          <div className="text-black/50">
+                            {share.share + "x"}
+                          </div>
+                        )}
+                        <div className="text-orange-400">
+                          {share.amount.toString() + " " + currencyType}
+                        </div>
+                      </div>
+                    </div>
+                  )
                 );
               })}
             </div>

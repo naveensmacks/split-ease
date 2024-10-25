@@ -38,10 +38,12 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     console.log("expenseinfo: ", expenseinfo);
   }
 
-  const expenseTypelist = Object.keys(ExpenseType).map((key) => ({
-    value: key,
-    label: key.charAt(0) + key.slice(1).toLowerCase(),
-  }));
+  const expenseTypelist = Object.keys(ExpenseType)
+    .filter((key) => ExpenseType.PAYMENT !== key)
+    .map((key) => ({
+      value: key,
+      label: key.charAt(0) + key.slice(1).toLowerCase(),
+    }));
 
   const memberList = useMemo(
     () => (selectedGroup ? selectedGroup.users : []),
@@ -262,13 +264,6 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     }
 
     setValue("shares", distributedShares);
-  };
-
-  const splitUnEqually = () => {
-    const shares = watch("shares");
-    const amount = watch("amount");
-    if (!amount) {
-    }
   };
 
   const noOfMembersInvolved = () => {

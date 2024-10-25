@@ -115,5 +115,7 @@ enum ExpenseType {
   RENT
   UTILITIES
   MOVIE
+  SHOPPING
+  PAYMENT
   OTHER
 }

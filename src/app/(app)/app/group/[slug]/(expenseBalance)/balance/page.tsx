@@ -3,7 +3,7 @@ import DisplayInitials from "@/components/display-initials";
 import SettleUpBtn from "@/components/settle-up-btn";
 import { Button } from "@/components/ui/button";
 import { useGroupContext } from "@/lib/hooks";
-import { getDetailedBalance } from "@/lib/utils";
+
 import { MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { useState } from "react";
@@ -12,9 +12,7 @@ type BalancePageProps = {
   params: { slug: string };
 };
 export default function BalancePageProps({ params }: BalancePageProps) {
-  const { selectedGroup } = useGroupContext();
-  const balance = getDetailedBalance(selectedGroup);
-  // console.log("balanceZ: ", balance);
+  const { selectedGroup, detailedBalance: balance } = useGroupContext();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Toggle function for expanding/collapsing
@@ -67,7 +65,10 @@ export default function BalancePageProps({ params }: BalancePageProps) {
               >
                 {balance.transactors?.map((transactor) => {
                   return transactor.amount > 0 ? (
-                    <div className="flex items-center justify-between sm:w-9/12">
+                    <div
+                      key={transactor.user.userId}
+                      className="flex items-center justify-between sm:w-9/12"
+                    >
                       <div className="flex items-center gap-x-2">
                         <PlusIcon className="min-w-3 min-h-3 hidden sm:block" />
                         <div>
@@ -85,6 +86,7 @@ export default function BalancePageProps({ params }: BalancePageProps) {
                         </div>
                       </div>
                       <SettleUpBtn
+                        actionType="add"
                         payerId={transactor.user.userId}
                         recepientId={balance.user.userId}
                         amount={Math.abs(transactor.amount)}
@@ -93,7 +95,10 @@ export default function BalancePageProps({ params }: BalancePageProps) {
                       </SettleUpBtn>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between sm:w-9/12">
+                    <div
+                      key={transactor.user.userId}
+                      className="flex items-center justify-between sm:w-9/12"
+                    >
                       <div className="flex items-center gap-x-2">
                         <MinusIcon className="min-w-3 min-h-3 hidden sm:block" />
                         <div>
@@ -111,6 +116,7 @@ export default function BalancePageProps({ params }: BalancePageProps) {
                         </div>
                       </div>
                       <SettleUpBtn
+                        actionType="add"
                         payerId={balance.user.userId}
                         recepientId={transactor.user.userId}
                         amount={Math.abs(transactor.amount)}

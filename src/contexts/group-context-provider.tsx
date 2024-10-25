@@ -3,17 +3,20 @@ import {
   addExpense,
   addgroup,
   addMemberToGroup,
+  addPayment,
   editExpense,
   editGroup,
+  editPayment,
 } from "@/actions/actions";
 import {
+  BalanceView,
   ExpenseEssential,
   ExpenseWithRelations,
   GroupEssential,
   GroupWithRelations,
 } from "@/lib/types";
-import { calculateBalances } from "@/lib/utils";
-import { TGroupForm, TMemberForm } from "@/lib/validation";
+import { calculateBalances, getDetailedBalance } from "@/lib/utils";
+import { TGroupForm, TMemberForm, TSettleUpForm } from "@/lib/validation";
 import { Group, User } from "@prisma/client";
 import { createContext, useEffect, useState } from "react";
 
@@ -38,6 +41,12 @@ type GroupContextType = {
   selectedExpenseId: string | null;
   handleSelectedExpenseId: (expenseId: string) => void;
   getExpenseFromList: (expenseId: string) => ExpenseWithRelations | null;
+  handleAddPayment: (
+    newPayment: TSettleUpForm
+  ) => ReturnType<typeof addPayment>;
+  handleEditPayment: (
+    updatedPayment: TSettleUpForm
+  ) => ReturnType<typeof editPayment>;
   handleAddExpense: (
     newExpense: ExpenseEssential
   ) => ReturnType<typeof addExpense>;
@@ -45,6 +54,7 @@ type GroupContextType = {
     updatedExpense: ExpenseEssential
   ) => ReturnType<typeof editExpense>;
   userId: string;
+  detailedBalance: BalanceView[] | undefined;
 };
 
 type GroupContextProviderProps = {
@@ -69,6 +79,8 @@ export default function GroupContextProvider({
   const selectedGroup =
     groupList?.find((group) => group.groupId === selectedGroupId) || null;
 
+  const detailedBalance = getDetailedBalance(selectedGroup);
+
   const selectedGroupMemberList =
     selectedGroup && selectedGroup.users ? selectedGroup.users : [];
 
@@ -91,6 +103,60 @@ export default function GroupContextProvider({
             const updatedGroup = {
               ...group,
               expenses: [...group.expenses, actionData.data],
+            };
+            return {
+              ...updatedGroup,
+              balance: calculateBalances(updatedGroup),
+            };
+          }
+          return group;
+        })
+      );
+    }
+    return actionData;
+  };
+
+  const handleAddPayment = async (newPayment: TSettleUpForm) => {
+    const actionData = await addPayment(newPayment, userId, selectedGroupId!);
+    if (actionData.isSuccess && actionData.data) {
+      setGroupList((prev) =>
+        prev.map((group) => {
+          if (group.groupId === selectedGroupId) {
+            const updatedGroup = {
+              ...group,
+              expenses: [...group.expenses, actionData.data],
+            };
+            return {
+              ...updatedGroup,
+              balance: calculateBalances(updatedGroup),
+            };
+          }
+          return group;
+        })
+      );
+    }
+    return actionData;
+  };
+
+  const handleEditPayment = async (updatedPayment: TSettleUpForm) => {
+    console.log("handleEditPayment selectedExpenseId: ", selectedExpenseId);
+    const actionData = await editPayment(
+      selectedExpenseId!,
+      userId,
+      updatedPayment
+    );
+    if (actionData.isSuccess && actionData.data) {
+      setGroupList((prev) =>
+        prev.map((group) => {
+          if (group.groupId === selectedGroupId) {
+            const updatedGroup = {
+              ...group,
+              expenses: group.expenses.map((expense) => {
+                if (expense.expenseId === selectedExpenseId) {
+                  return actionData.data;
+                }
+                return expense;
+              }),
             };
             return {
               ...updatedGroup,
@@ -245,9 +311,12 @@ export default function GroupContextProvider({
         selectedExpenseId,
         handleSelectedExpenseId,
         getExpenseFromList,
+        handleAddPayment,
+        handleEditPayment,
         handleAddExpense,
         handleEditExpense,
         userId,
+        detailedBalance,
       }}
     >
       {children}

@@ -12,21 +12,31 @@ import { ThickArrowRightIcon } from "@radix-ui/react-icons";
 import { ComboBox } from "./combo-box";
 import { DatePicker } from "./date-picker";
 import { Button } from "./ui/button";
+import { toast } from "sonner";
+import { setServerFieldErrors } from "@/lib/utils";
 
-type PetFormProps = {
+type SettleUpFormProps = {
+  actionType: "add" | "edit";
   onFormSubmission: () => void;
   payerId: string;
   recepientId: string;
   amount: number;
+  settleUpDescription?: string;
+  settleUpDate?: Date;
 };
 
 export default function SettleUpForm({
+  actionType,
   onFormSubmission,
   payerId,
   recepientId,
   amount,
-}: PetFormProps) {
-  const { selectedGroup } = useGroupContext();
+  settleUpDescription,
+  settleUpDate,
+}: SettleUpFormProps) {
+  const { selectedGroup, handleAddPayment, handleEditPayment } =
+    useGroupContext();
+  const isEditing = actionType === "edit";
   const payer = selectedGroup?.users.find((user) => user.userId === payerId);
 
   const recepient = selectedGroup?.users.find(
@@ -43,28 +53,6 @@ export default function SettleUpForm({
     label: user.firstName + " " + user.lastName,
   }));
 
-  /*
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newPet = {
-      name: formData.get("name") as string,
-      ownerName: formData.get("ownerName") as string,
-      imageUrl:
-        (formData.get("imageUrl") as string) ||
-        "https://bytegrad.com/course-assets/react-nextjs/pet-placeholder.png",
-      age: +(formData.get("age") as string),
-      notes: formData.get("notes") as string,
-    };
-    if (isEditing) {
-      const editedPet = { ...newPet, id: selectedPet?.id as string };
-      handleEditPet(editedPet);
-    } else {
-      handleAddPet(newPet);
-    }
-  };
-  */
-
   const {
     register,
     control,
@@ -76,32 +64,48 @@ export default function SettleUpForm({
     formState: { isSubmitting, errors },
   } = useForm<TSettleUpForm>({
     resolver: zodResolver(settleUpFormSchema),
-    defaultValues: {
-      payerId,
-      recepientId,
-      amount,
-      settleUpDate: new Date(),
-    },
+    defaultValues: isEditing
+      ? { payerId, recepientId, amount, settleUpDate, settleUpDescription }
+      : {
+          payerId,
+          recepientId,
+          amount,
+          settleUpDate: new Date(),
+        },
   });
+
+  const onSubmit = async () => {
+    const result = await trigger();
+    if (!result) return;
+    let paymentData = getValues();
+    console.log("PaymentData: ", paymentData);
+    let actionData;
+    if (isEditing) {
+      actionData = await handleEditPayment(paymentData);
+    } else {
+      actionData = await handleAddPayment(paymentData);
+    }
+
+    console.log("actionData: ", actionData);
+    if (actionData.isSuccess && actionData.data) {
+      if (isEditing) {
+        toast.success("Edited the payment successfully");
+      } else {
+        toast.success("Recorded a payment successfully");
+      }
+      // router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
+      onFormSubmission();
+    } else if (!actionData.isSuccess) {
+      if (actionData.fieldErrors) {
+        setServerFieldErrors(actionData.fieldErrors, setError);
+      } else {
+        toast.error(actionData.message);
+      }
+    }
+  };
+
   return (
-    <form
-      action={async () => {
-        //trigger validation of all fields since no arg is passed, if array of fieldNames is passed it will validate only those
-        const result = await trigger();
-        if (!result) return;
-
-        onFormSubmission();
-
-        const petData = getValues();
-        // petData.imageUrl = petData.imageUrl || DEFAULT_PET_IMAGE;
-        // if (isEditing) {
-        //   await handleEditPet(selectedPet!.id, petData);
-        // } else {
-        //   await handleAddPet(petData);
-        // }
-      }}
-      className="flex flex-col space-y-3"
-    >
+    <form className="flex flex-col space-y-3" onSubmit={handleSubmit(onSubmit)}>
       <div className="flex space-x-3 justify-center items-center">
         {payer && (
           <DisplayInitials
@@ -134,9 +138,6 @@ export default function SettleUpForm({
               />
             )}
           ></Controller>
-          {errors.payerId && (
-            <p className="text-red-500/85">{errors.payerId.message}</p>
-          )}
         </div>
         <span className="text-primecolor">{" paid "}</span>
         <div className="space-y-1 w-[150px]">
@@ -154,10 +155,15 @@ export default function SettleUpForm({
               />
             )}
           ></Controller>
-          {errors.recepientId && (
-            <p className="text-red-500/85">{errors.recepientId.message}</p>
-          )}
         </div>
+      </div>
+      <div>
+        {errors.payerId && (
+          <p className="text-red-500/85">{errors.payerId.message}</p>
+        )}
+        {errors.recepientId && (
+          <p className="text-red-500/85">{errors.recepientId.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="amount">Amount</Label>
