@@ -94,15 +94,24 @@ export default function GroupContextProvider({
     setSelectedExpenseId(expenseId);
   };
   //expense form
-  const handleAddExpense = async (newExpense: ExpenseEssential) => {
-    const actionData = await addExpense(newExpense, userId, selectedGroupId!);
+  const updateExpenseList = (
+    actionData: Awaited<ReturnType<typeof addExpense>>,
+    isEdit: boolean
+  ) => {
     if (actionData.isSuccess && actionData.data) {
       setGroupList((prev) =>
         prev.map((group) => {
           if (group.groupId === selectedGroupId) {
             const updatedGroup = {
               ...group,
-              expenses: [...group.expenses, actionData.data],
+              expenses: isEdit
+                ? group.expenses.map((expense) => {
+                    if (expense.expenseId === selectedExpenseId) {
+                      return actionData.data;
+                    }
+                    return expense;
+                  })
+                : [...group.expenses, actionData.data],
             };
             return {
               ...updatedGroup,
@@ -113,28 +122,16 @@ export default function GroupContextProvider({
         })
       );
     }
+  };
+  const handleAddExpense = async (newExpense: ExpenseEssential) => {
+    const actionData = await addExpense(newExpense, userId, selectedGroupId!);
+    updateExpenseList(actionData, false);
     return actionData;
   };
 
   const handleAddPayment = async (newPayment: TSettleUpForm) => {
     const actionData = await addPayment(newPayment, userId, selectedGroupId!);
-    if (actionData.isSuccess && actionData.data) {
-      setGroupList((prev) =>
-        prev.map((group) => {
-          if (group.groupId === selectedGroupId) {
-            const updatedGroup = {
-              ...group,
-              expenses: [...group.expenses, actionData.data],
-            };
-            return {
-              ...updatedGroup,
-              balance: calculateBalances(updatedGroup),
-            };
-          }
-          return group;
-        })
-      );
-    }
+    updateExpenseList(actionData, false);
     return actionData;
   };
 
@@ -145,28 +142,7 @@ export default function GroupContextProvider({
       userId,
       updatedPayment
     );
-    if (actionData.isSuccess && actionData.data) {
-      setGroupList((prev) =>
-        prev.map((group) => {
-          if (group.groupId === selectedGroupId) {
-            const updatedGroup = {
-              ...group,
-              expenses: group.expenses.map((expense) => {
-                if (expense.expenseId === selectedExpenseId) {
-                  return actionData.data;
-                }
-                return expense;
-              }),
-            };
-            return {
-              ...updatedGroup,
-              balance: calculateBalances(updatedGroup),
-            };
-          }
-          return group;
-        })
-      );
-    }
+    updateExpenseList(actionData, true);
     return actionData;
   };
 
@@ -177,28 +153,7 @@ export default function GroupContextProvider({
       userId,
       selectedExpenseId!
     );
-    if (actionData.isSuccess && actionData.data) {
-      setGroupList((prev) =>
-        prev.map((group) => {
-          if (group.groupId === selectedGroupId) {
-            const updatedGroup = {
-              ...group,
-              expenses: group.expenses.map((expense) => {
-                if (expense.expenseId === selectedExpenseId) {
-                  return actionData.data;
-                }
-                return expense;
-              }),
-            };
-            return {
-              ...updatedGroup,
-              balance: calculateBalances(updatedGroup),
-            };
-          }
-          return group;
-        })
-      );
-    }
+    updateExpenseList(actionData, true);
     return actionData;
   };
 

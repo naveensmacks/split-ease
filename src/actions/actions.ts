@@ -1,7 +1,9 @@
 "use server";
 
+import CreateNewExpense from "@/app/(app)/app/group/[slug]/expenses/add/page";
 import prisma from "@/lib/db";
 import { getUserByEmail, isMemberOfGroup } from "@/lib/server-utils";
+import { ExpenseWithRelations } from "@/lib/types";
 import {
   expenseSchema,
   groupFormSchema,
@@ -10,6 +12,101 @@ import {
   TExpenseForm,
 } from "@/lib/validation";
 import { ExpenseType } from "@prisma/client";
+
+//---DB actions
+async function updateExpense(
+  expenseId: string,
+  updatedById: string,
+  paidById: string,
+  data: {
+    amount: number;
+    expenseType: ExpenseType;
+    expenseDate: Date;
+    expenseDescription: string;
+    isSplitEqually: boolean;
+  },
+  shares: { paidToId: string; amount: number; share: number }[]
+) {
+  // Step 1: Delete existing shares for the expense
+  await prisma.share.deleteMany({
+    where: { expenseId: expenseId },
+  });
+  // Step 2: Update the expense and create new shares
+  try {
+    const expenseWithRelations = await prisma.expense.update({
+      where: { expenseId: expenseId },
+      data: {
+        ...data,
+        paidByUser: { connect: { userId: paidById } },
+        updatedByUser: { connect: { userId: updatedById } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        updatedByUser: true,
+        paidByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      message: "Could not edit expense/payment. Try again later.",
+    };
+  }
+}
+
+async function createNewExpense(
+  groupId: string,
+  userId: string,
+  paidById: string,
+  data: {
+    amount: number;
+    expenseType: ExpenseType;
+    expenseDate: Date;
+    expenseDescription: string;
+    isSplitEqually: boolean;
+  },
+  shares: { paidToId: string; amount: number; share: number }[]
+) {
+  try {
+    const expenseWithRelations = await prisma.expense.create({
+      data: {
+        ...data,
+        group: { connect: { groupId: groupId } },
+        paidByUser: { connect: { userId: paidById } },
+        addedByUser: { connect: { userId: userId } },
+        updatedByUser: { connect: { userId: userId } },
+        shares: { create: shares },
+      },
+      include: {
+        group: true,
+        addedByUser: true,
+        paidByUser: true,
+        updatedByUser: true,
+        shares: {
+          include: {
+            paidToUser: true,
+          },
+        },
+      },
+    });
+    return { isSuccess: true, data: expenseWithRelations };
+  } catch (error) {
+    console.log("error: ", error);
+    return {
+      isSuccess: false,
+      message: "Could not create expense/payment. Try again later.",
+    };
+  }
+}
+
 //--- Expense actions ---
 export async function editPayment(
   expenseId: string,
@@ -43,40 +140,15 @@ export async function editPayment(
   };
 
   //database mutation
-  // Step 1: Delete existing shares for the expense
-  await prisma.share.deleteMany({
-    where: { expenseId: expenseId },
-  });
-  // Step 2: Update the expense and create new shares
-  try {
-    const expenseWithRelations = await prisma.expense.update({
-      where: { expenseId: expenseId },
-      data: {
-        ...updatedData,
-        paidByUser: { connect: { userId: validatedPayment.data.payerId } },
-        updatedByUser: { connect: { userId: userId } },
-        shares: { create: shares },
-      },
-      include: {
-        group: true,
-        addedByUser: true,
-        updatedByUser: true,
-        paidByUser: true,
-        shares: {
-          include: {
-            paidToUser: true,
-          },
-        },
-      },
-    });
-    return { isSuccess: true, data: expenseWithRelations };
-  } catch (error) {
-    return {
-      isSuccess: false,
-      error: error,
-    };
-  }
+  return updateExpense(
+    expenseId,
+    userId,
+    validatedPayment.data.payerId,
+    updatedData,
+    shares
+  );
 }
+
 export async function addPayment(
   newPayment: unknown,
   userId: string,
@@ -110,36 +182,8 @@ export async function addPayment(
   };
 
   const { shares, paidById, ...data } = expenseData;
-  try {
-    const expenseWithRelations = await prisma.expense.create({
-      data: {
-        ...data,
-        group: { connect: { groupId: groupId } },
-        paidByUser: { connect: { userId: paidById } },
-        addedByUser: { connect: { userId: userId } },
-        updatedByUser: { connect: { userId: userId } },
-        shares: { create: shares },
-      },
-      include: {
-        group: true,
-        addedByUser: true,
-        paidByUser: true,
-        updatedByUser: true,
-        shares: {
-          include: {
-            paidToUser: true,
-          },
-        },
-      },
-    });
-    return { isSuccess: true, data: expenseWithRelations };
-  } catch (error) {
-    console.log("error: ", error);
-    return {
-      isSuccess: false,
-      message: "Could not create payment. Try again later.",
-    };
-  }
+  //Db create
+  return createNewExpense(groupId, userId, paidById, data, shares);
 }
 export async function addExpense(
   expense: unknown,
@@ -156,36 +200,8 @@ export async function addExpense(
   //remove  validatedGroup.data.currencyType from validatedGroup.data
   const { shares, paidById, ...data } = validatedExpense.data;
 
-  try {
-    const expenseWithRelations = await prisma.expense.create({
-      data: {
-        ...data,
-        group: { connect: { groupId: groupId } },
-        paidByUser: { connect: { userId: paidById } },
-        addedByUser: { connect: { userId: userId } },
-        updatedByUser: { connect: { userId: userId } },
-        shares: { create: shares },
-      },
-      include: {
-        group: true,
-        addedByUser: true,
-        paidByUser: true,
-        updatedByUser: true,
-        shares: {
-          include: {
-            paidToUser: true,
-          },
-        },
-      },
-    });
-    return { isSuccess: true, data: expenseWithRelations };
-  } catch (error) {
-    console.log("error: ", error);
-    return {
-      isSuccess: false,
-      message: "Could not create expense. Try again later.",
-    };
-  }
+  //Db create
+  return createNewExpense(groupId, userId, paidById, data, shares);
 }
 export async function editExpense(
   expense: unknown,
@@ -199,45 +215,12 @@ export async function editExpense(
       fieldErrors: validatedExpense.error.flatten().fieldErrors,
     };
   }
-  console.log("qexpenseIdq: ", expenseId);
+
   //remove  validatedGroup.data.currencyType from validatedGroup.data
   const { shares, paidById, ...data } = validatedExpense.data;
 
-  // Step 1: Delete existing shares for the expense
-  await prisma.share.deleteMany({
-    where: { expenseId: expenseId },
-  });
-  // Step 2: Update the expense and create new shares
-
-  try {
-    const expenseWithRelations = await prisma.expense.update({
-      where: { expenseId: expenseId },
-      data: {
-        ...data,
-        paidByUser: { connect: { userId: paidById } },
-        updatedByUser: { connect: { userId: userId } },
-        shares: { create: shares },
-      },
-      include: {
-        group: true,
-        addedByUser: true,
-        updatedByUser: true,
-        paidByUser: true,
-        shares: {
-          include: {
-            paidToUser: true,
-          },
-        },
-      },
-    });
-    return { isSuccess: true, data: expenseWithRelations };
-  } catch (error) {
-    console.log("error: ", error);
-    return {
-      isSuccess: false,
-      message: "Could not update expense. Try again later.",
-    };
-  }
+  //database mutation
+  return updateExpense(expenseId, userId, paidById, data, shares);
 }
 
 // --- group actions ---
