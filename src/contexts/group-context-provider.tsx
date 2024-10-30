@@ -98,7 +98,7 @@ export default function GroupContextProvider({
     actionData: Awaited<ReturnType<typeof addExpense>>,
     isEdit: boolean
   ) => {
-    if (actionData.isSuccess && actionData.data) {
+    if (actionData.isSuccess && "data" in actionData && actionData.data) {
       setGroupList((prev) =>
         prev.map((group) => {
           if (group.groupId === selectedGroupId) {

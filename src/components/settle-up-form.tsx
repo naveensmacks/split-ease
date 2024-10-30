@@ -87,7 +87,7 @@ export default function SettleUpForm({
     }
 
     console.log("actionData: ", actionData);
-    if (actionData.isSuccess && actionData.data) {
+    if (actionData.isSuccess && "data" in actionData && actionData.data) {
       if (isEditing) {
         toast.success("Edited the payment successfully");
       } else {
@@ -96,9 +96,9 @@ export default function SettleUpForm({
       // router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
       onFormSubmission();
     } else if (!actionData.isSuccess) {
-      if (actionData.fieldErrors) {
+      if ("fieldErrors" in actionData && actionData.fieldErrors) {
         setServerFieldErrors(actionData.fieldErrors, setError);
-      } else {
+      } else if ("message" in actionData && actionData.message) {
         toast.error(actionData.message);
       }
     }

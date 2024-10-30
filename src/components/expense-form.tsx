@@ -289,7 +289,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
       actionData = await handleEditExpense(expenseData);
     }
     console.log("actionData: ", actionData);
-    if (actionData.isSuccess && actionData.data) {
+    if (actionData.isSuccess && "data" in actionData && actionData.data) {
       toast.success(
         isEditing
           ? "Expense updated successfully"
@@ -297,9 +297,9 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
       );
       router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
     } else if (!actionData.isSuccess) {
-      if (actionData.fieldErrors) {
+      if ("fieldErrors" in actionData && actionData.fieldErrors) {
         setServerFieldErrors(actionData.fieldErrors, setError);
-      } else {
+      } else if ("message" in actionData && actionData.message) {
         toast.error(actionData.message);
       }
     }
