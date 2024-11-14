@@ -1,7 +1,7 @@
 "use client";
 import AddExpenseButton from "@/components/add-expense-btn";
 import DisplayInitials from "@/components/display-initials";
-import { useGroupContext } from "@/lib/hooks";
+import { useGroupContext, useUserContext } from "@/lib/hooks";
 import { ExpenseWithRelations } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ExpenseType } from "@prisma/client";
@@ -12,7 +12,9 @@ type ExpensesPageProps = {
   params: { slug: string };
 };
 export default function ExpensesPage({ params }: ExpensesPageProps) {
-  const { selectedGroup, userId } = useGroupContext();
+  const { selectedGroup } = useGroupContext();
+  const { user } = useUserContext();
+  const userId = user.userId;
   const expenses = selectedGroup?.expenses;
   const currencyType = selectedGroup?.currencyType;
 
@@ -59,8 +61,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
       <div className="fixed sm:hidden right-4 bottom-14">
         <AddExpenseButton />
       </div>
-      {expenses &&
-        expenses.length > 0 &&
+      {expenses && expenses.length > 0 ? (
         expenses.map((item) => {
           if (ExpenseType.PAYMENT === item.expenseType) {
             return (
@@ -116,7 +117,23 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               </div>
             </Link>
           );
-        })}
+        })
+      ) : (
+        <EmptyView selectedGroupId={params.slug} />
+      )}
     </>
+  );
+}
+
+function EmptyView({ selectedGroupId }: { selectedGroupId: string }) {
+  return (
+    <div className="flex items-center justify-center text-black/40 rounded-lg min-h-64">
+      <Link
+        href={`/app/group/${selectedGroupId}/expenses/add`}
+        className="h-15 max-w-96 p-5 flex items-center justify-center"
+      >
+        You don't have any expenses. Add one now!
+      </Link>
+    </div>
   );
 }

@@ -1,15 +1,18 @@
 "use client";
 import Logo from "./logo";
 import H1 from "./h1";
-import { cn } from "@/lib/utils";
+import { cn, extractInitials } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import groupIcon from "../../public/groupIcon.svg";
 import Image from "next/image";
+import { useUserContext } from "@/lib/hooks";
 
 export default function AppHeader() {
   const activePathname = usePathname();
+  const { user } = useUserContext();
+  const initials = extractInitials(user.firstName, user.lastName);
   return (
     <div className="flex items-center sm:h-20 h-16 bg-primecolor gap-x-1 px-4 justify-between border-b border-white/10">
       <div className="flex items-center gap-x-3">
@@ -56,7 +59,7 @@ export default function AppHeader() {
               className="text-xl mb-2 flex justify-center items-center gap-x-1"
             >
               <div className="flex w-7 h-7 bg-accountcolor rounded-full text-white text-sm justify-center items-center">
-                NK
+                {initials}
               </div>
               Account
             </Link>

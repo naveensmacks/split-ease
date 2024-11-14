@@ -1,15 +1,259 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { getUserByEmail, isMemberOfGroup } from "@/lib/server-utils";
 import {
+  getGroupsByUserId,
+  getUserByEmail,
+  getUserById,
+  isMemberOfGroup,
+} from "@/lib/server-utils";
+import {
+  signUpSchema,
   expenseSchema,
   groupFormSchema,
   memberFormSchema,
   settleUpFormSchema,
   TExpenseForm,
+  editAccountSchema,
+  editPasswordSchema,
 } from "@/lib/validation";
-import { ExpenseType } from "@prisma/client";
+import { ExpenseType, Prisma } from "@prisma/client";
+import { signIn, signOut } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import { isRedirectError } from "next/dist/client/components/redirect";
+import bcrypt from "bcryptjs";
+
+// --- account actions ---
+export async function editPassword(userId: string, formData: unknown) {
+  //validation
+  const validatedFormDetails = editPasswordSchema.safeParse(formData);
+  if (!validatedFormDetails.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedFormDetails.error.flatten().fieldErrors,
+    };
+  }
+  const formDataObject = validatedFormDetails.data;
+  const user = await getUserById(userId);
+  if (!user || !user.hashedPassword) {
+    return {
+      isSuccess: false,
+      message: "User not found",
+    };
+  }
+  const passwordsMatch = await bcrypt.compare(
+    formDataObject.currentPassword as string,
+    user.hashedPassword
+  );
+  if (!passwordsMatch) {
+    return {
+      isSuccess: false,
+      fieldErrors: { currentPassword: ["Invalid password"] },
+    };
+  }
+  if (formDataObject.currentPassword === formDataObject.newPassword) {
+    return {
+      isSuccess: false,
+      fieldErrors: {
+        confirmNewPassword: [
+          "New password must be different from current password",
+        ],
+      },
+    };
+  }
+
+  if (formDataObject.newPassword !== formDataObject.confirmNewPassword) {
+    return {
+      isSuccess: false,
+      fieldErrors: { confirmNewPassword: ["Passwords do not match"] },
+    };
+  }
+  const newPassword = formDataObject.newPassword as string;
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  //update password
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        hashedPassword: hashedNewPassword,
+      },
+    });
+    const groups = await getGroupsByUserId(userId);
+
+    return {
+      isSuccess: true,
+      data: { groups, updatedUser },
+    };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      message: "Error updating password",
+    };
+  }
+}
+
+export async function editAccountDetails(userId: string, userDetails: unknown) {
+  //validation
+  const validatedAccountDetails = editAccountSchema.safeParse(userDetails);
+  if (!validatedAccountDetails.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedAccountDetails.error.flatten().fieldErrors,
+    };
+  }
+  const { firstName, lastName, email, password } = validatedAccountDetails.data;
+
+  //getUserById
+  const user = await getUserById(userId);
+  if (!user || !user.hashedPassword) {
+    return {
+      isSuccess: false,
+      message: "User not found",
+    };
+  }
+
+  console.log("user: ", user);
+
+  //check password
+  const passwordsMatch = await bcrypt.compare(
+    password as string,
+    user.hashedPassword
+  );
+  if (!passwordsMatch) {
+    return {
+      isSuccess: false,
+      fieldErrors: { password: ["Invalid password"] },
+    };
+  }
+
+  //check if email already exists
+  if (email.toLowerCase() !== user.email?.toLowerCase()) {
+    const emailExists = await getUserByEmail(email);
+    if (emailExists) {
+      return {
+        isSuccess: false,
+        fieldErrors: { email: ["Email already registered"] },
+      };
+    }
+  }
+
+  //update user
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        userId,
+      },
+      data: {
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+      },
+    });
+    const groups = await getGroupsByUserId(userId);
+
+    return {
+      isSuccess: true,
+      data: { groups, updatedUser },
+    };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      message: "Error updating user",
+    };
+  }
+}
+
+// --- user actions ---
+//this action is called by useFormState, hence need to have an extra first argument which denotes the previous state
+export async function signup(prevState: unknown, formData: unknown) {
+  //check if FormData is an FormData type
+  console.log("formData: ", formData);
+  if (!(formData instanceof FormData)) {
+    return {
+      message: "Invalid form Data..",
+    };
+  }
+
+  //convert formData to a plain Object
+  const formDataObject = Object.fromEntries(formData.entries());
+
+  //validation
+  const validatedFormDataObject = signUpSchema.safeParse(formDataObject);
+  if (!validatedFormDataObject.success) {
+    return {
+      message: "Invalid form Data.",
+    };
+  }
+
+  const { firstName, lastName, email, password } = validatedFormDataObject.data;
+  //hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        hashedPassword,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return {
+          message: "Email already exists.",
+        };
+      }
+    }
+  }
+  //we can send formData Directly instead of converting to json object, next-auth supports this
+  //means next auth wil convert it to object automatically
+  await signIn("credentials", formData);
+}
+
+export async function login(prevState: unknown, formData: unknown) {
+  //check if FormData is an instance of FormData type
+  if (!(formData instanceof FormData)) {
+    return {
+      message: "Invalid form Data.",
+    };
+  }
+
+  try {
+    //after signin redirect to the callback url
+    await signIn("credentials", formData);
+    //no code after this line executes as redirects happens at the SignIn function itself
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return {
+            message: "Invalid credentials.",
+          };
+        default:
+          return {
+            message: "Could not log In.",
+          };
+      }
+    }
+
+    // NExtJs redirects are thrown as errors, so they will be caught here.
+    // Rethrowing to allow the redirect to proceed, otherwise, manual path revalidation is required in here.
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return {
+      message: "Could not log In...",
+    };
+  }
+}
+
+export async function logOut() {
+  await signOut({ redirectTo: "/" });
+}
 
 //---DB actions
 async function updateExpense(

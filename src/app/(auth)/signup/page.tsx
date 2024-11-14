@@ -4,10 +4,10 @@ import Link from "next/link";
 
 export default function Page() {
   return (
-    <main className="flex flex-grow flex-col gap-y-5 justify-center items-center">
-      <H1 className="mb-5">Sign Up</H1>
+    <main className="flex flex-grow flex-col gap-y-2 justify-center items-center">
+      <H1 className="mb-2">Sign Up</H1>
       <AuthForm type="signup" />
-      <p className="mt-6 text-sm text-zinc-500">
+      <p className="text-sm text-zinc-500">
         Already have an account?{" "}
         <Link href="/login" className="underline text-primecolor/85">
           Log In

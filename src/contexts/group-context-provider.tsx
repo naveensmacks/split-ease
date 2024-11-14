@@ -4,10 +4,13 @@ import {
   addgroup,
   addMemberToGroup,
   addPayment,
+  editAccountDetails,
   editExpense,
   editGroup,
+  editPassword,
   editPayment,
 } from "@/actions/actions";
+import { useUserContext } from "@/lib/hooks";
 import {
   BalanceView,
   ExpenseEssential,
@@ -16,7 +19,13 @@ import {
   GroupWithRelations,
 } from "@/lib/types";
 import { calculateBalances, getDetailedBalance } from "@/lib/utils";
-import { TGroupForm, TMemberForm, TSettleUpForm } from "@/lib/validation";
+import {
+  TAccountForm,
+  TEditPasswordForm,
+  TGroupForm,
+  TMemberForm,
+  TSettleUpForm,
+} from "@/lib/validation";
 import { Group, User } from "@prisma/client";
 import { createContext, useEffect, useState } from "react";
 
@@ -53,22 +62,26 @@ type GroupContextType = {
   handleEditExpense: (
     updatedExpense: ExpenseEssential
   ) => ReturnType<typeof editExpense>;
-  userId: string;
   detailedBalance: BalanceView[] | undefined;
+  handleEditAccountDetails: (
+    userDetails: TAccountForm
+  ) => ReturnType<typeof editAccountDetails>;
+  handleEditPassword: (
+    editPasswordForm: TEditPasswordForm
+  ) => ReturnType<typeof editPassword>;
 };
 
 type GroupContextProviderProps = {
   data: GroupWithRelations[];
-  userId: string;
   children: React.ReactNode;
 };
 
 export default function GroupContextProvider({
   data,
-  userId,
   children,
 }: GroupContextProviderProps) {
   const [groupList, setGroupList] = useState<GroupWithRelations[]>(data);
+  const { user, setUser } = useUserContext();
 
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(
@@ -83,6 +96,27 @@ export default function GroupContextProvider({
 
   const selectedGroupMemberList =
     selectedGroup && selectedGroup.users ? selectedGroup.users : [];
+
+  const handleEditAccountDetails = async (userDetails: TAccountForm) => {
+    const actionData = await editAccountDetails(user.userId, userDetails);
+
+    if (actionData.isSuccess && actionData.data?.groups) {
+      const { groups, updatedUser } = actionData.data;
+      setUser(updatedUser);
+      setGroupList(updateGroupBalances(groups));
+    }
+    return actionData;
+  };
+
+  const handleEditPassword = async (editPasswordForm: TEditPasswordForm) => {
+    const actionData = await editPassword(user.userId, editPasswordForm);
+    if (actionData.isSuccess && actionData.data?.groups) {
+      const { groups, updatedUser } = actionData.data;
+      setUser(updatedUser);
+      setGroupList(updateGroupBalances(groups));
+    }
+    return actionData;
+  };
 
   const handleChangeSelectedGroupId = async (
     groupId: GroupWithRelations["groupId"]
@@ -124,13 +158,21 @@ export default function GroupContextProvider({
     }
   };
   const handleAddExpense = async (newExpense: ExpenseEssential) => {
-    const actionData = await addExpense(newExpense, userId, selectedGroupId!);
+    const actionData = await addExpense(
+      newExpense,
+      user.userId,
+      selectedGroupId!
+    );
     updateExpenseList(actionData, false);
     return actionData;
   };
 
   const handleAddPayment = async (newPayment: TSettleUpForm) => {
-    const actionData = await addPayment(newPayment, userId, selectedGroupId!);
+    const actionData = await addPayment(
+      newPayment,
+      user.userId,
+      selectedGroupId!
+    );
     updateExpenseList(actionData, false);
     return actionData;
   };
@@ -139,7 +181,7 @@ export default function GroupContextProvider({
     console.log("handleEditPayment selectedExpenseId: ", selectedExpenseId);
     const actionData = await editPayment(
       selectedExpenseId!,
-      userId,
+      user.userId,
       updatedPayment
     );
     updateExpenseList(actionData, true);
@@ -150,7 +192,7 @@ export default function GroupContextProvider({
     console.log("selectedExpenseId: ", selectedExpenseId);
     const actionData = await editExpense(
       updatedExpense,
-      userId,
+      user.userId,
       selectedExpenseId!
     );
     updateExpenseList(actionData, true);
@@ -159,7 +201,7 @@ export default function GroupContextProvider({
 
   //Group Form
   const handleAddGroup = async (newGroup: GroupEssential) => {
-    const actionData = await addgroup(newGroup, userId);
+    const actionData = await addgroup(newGroup, user.userId);
 
     if (actionData.isSuccess && actionData.data) {
       setGroupList((prev) =>
@@ -181,7 +223,7 @@ export default function GroupContextProvider({
     updatedGroup: GroupEssential,
     groupId: Group["groupId"]
   ) => {
-    const actionData = await editGroup(updatedGroup, groupId, userId);
+    const actionData = await editGroup(updatedGroup, groupId, user.userId);
 
     if (actionData.isSuccess && actionData.data) {
       setGroupList((prev) =>
@@ -239,16 +281,15 @@ export default function GroupContextProvider({
     return actionData;
   };
 
+  //set Balances
+  const updateGroupBalances = (groupList: GroupWithRelations[]) => {
+    return groupList.map((group) => ({
+      ...group,
+      balance: calculateBalances(group),
+    }));
+  };
   useEffect(() => {
-    //set Balances
-    const updatedGroupList = (prevList: GroupWithRelations[]) => {
-      return prevList.map((group) => ({
-        ...group,
-        balance: calculateBalances(group),
-      }));
-    };
-
-    setGroupList((prev) => updatedGroupList(prev));
+    setGroupList((prev) => updateGroupBalances(prev));
   }, []);
 
   return (
@@ -270,8 +311,9 @@ export default function GroupContextProvider({
         handleEditPayment,
         handleAddExpense,
         handleEditExpense,
-        userId,
         detailedBalance,
+        handleEditAccountDetails,
+        handleEditPassword,
       }}
     >
       {children}

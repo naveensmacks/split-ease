@@ -1,13 +1,16 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn, extractInitials } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import groupIcon from "../../public/groupIcon.svg";
 import Image from "next/image";
+import { useUserContext } from "@/lib/hooks";
 
 export default function AppFooter() {
   const activePathname = usePathname();
+  const { user } = useUserContext();
+  const initials = extractInitials(user.firstName, user.lastName);
   return (
     <>
       <footer className="h-16 border-t border-black/5 p-3 hidden sm:block">
@@ -57,7 +60,7 @@ export default function AppFooter() {
               className="sm:text-2xl text-sm mb-2 flex justify-center items-center gap-x-1"
             >
               <div className="flex w-7 h-7 bg-accountcolor rounded-full text-white text-sm justify-center items-center">
-                NK
+                {initials}
               </div>
               Account
             </Link>

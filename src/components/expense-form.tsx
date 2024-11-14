@@ -1,5 +1,5 @@
 "use client";
-import { useGroupContext } from "@/lib/hooks";
+import { useGroupContext, useUserContext } from "@/lib/hooks";
 import { expenseSchema, TExpenseForm } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -31,6 +31,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     handleAddExpense,
     handleEditExpense,
   } = useGroupContext();
+  const { user } = useUserContext();
   const router = useRouter();
   let expenseinfo: ExpenseWithRelations | null = null;
   if (isEditing && selectedExpenseId) {
@@ -98,6 +99,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
           expenseDescription: "",
           expenseDate: new Date(),
           isSplitEqually: true,
+          paidById: user?.userId ?? "",
           //when component re-renders default values will not be set again so need to use useffect
           //to set the values, because first time the memberList will be empty[] as it is async data fetching I guess
           shares: defaultShares,
@@ -220,13 +222,18 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     //console.log("diff: ", diff.toNumber());
     // Adjust one share to account for rounding discrepancy
     if (!diff.isZero()) {
+      let noOfSharestheDiffCovers = Math.abs(diff.mul(100).toNumber());
+      console.log("noOfSharestheDiffCovers: ", noOfSharestheDiffCovers);
+      const minDiff = diff.lessThan(0) ? -0.01 : 0.01;
       for (const share of newShares) {
+        if (noOfSharestheDiffCovers < 1) {
+          break;
+        }
         if (share.share && share.amount) {
           share.amount = Number(
-            new Decimal(share.amount).plus(diff).toDecimalPlaces(2)
+            new Decimal(share.amount).plus(minDiff).toDecimalPlaces(2)
           );
-          //console.log("share.amount: ", share.amount);
-          break;
+          --noOfSharestheDiffCovers;
         }
       }
     }
@@ -258,9 +265,17 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     const diff = totalAmount.minus(sumOfShares);
 
     if (!diff.isZero()) {
-      distributedShares[0].amount = Number(
-        new Decimal(distributedShares[0].amount).plus(diff).toDecimalPlaces(2)
-      );
+      // Adjust the first one/few share to account for rounding discrepancy
+      //first find into howmany equals we can divide the diff
+      const noOfSharestheDiffCovers = Math.abs(diff.mul(100).toNumber());
+      const minDiff = diff.lessThan(0) ? -0.01 : 0.01;
+      for (let i = 0; i < noOfSharestheDiffCovers; i++) {
+        distributedShares[i].amount = Number(
+          new Decimal(distributedShares[i].amount)
+            .plus(minDiff)
+            .toDecimalPlaces(2)
+        );
+      }
     }
 
     setValue("shares", distributedShares);
@@ -502,7 +517,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
           ))}
       </div>
       <Button
-        className="rounded-lg mx-auto w-1/2"
+        className="rounded-lg mx-auto w-1/2 bg-opacity-85"
         type="submit"
         disabled={isSubmitting}
       >

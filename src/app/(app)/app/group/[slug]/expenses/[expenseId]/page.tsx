@@ -49,7 +49,7 @@ export default function ExpenseSharesPage({ params }: ExpenseSharesPageProps) {
         </div>
       )}
 
-      <ExpenseDetailsView groupId={slug} expenseId={expenseId} />
+      <ExpenseDetailsView expenseId={expenseId} />
     </>
   );
 }

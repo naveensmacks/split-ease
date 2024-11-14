@@ -10,7 +10,7 @@ import { cn, setServerFieldErrors } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function MemberForm() {
-  const { selectedGroupId } = useGroupContext();
+  const { selectedGroupId, handleAddMember } = useGroupContext();
   const {
     register,
     trigger,
@@ -31,7 +31,7 @@ export default function MemberForm() {
   //When both defaultValue(second argument in watch()) and defaultValues(of useForm) are supplied, defaultValue will be returned.
   //Watch the value of isRegistered
   const isRegistered = watch("isRegistered");
-  const { handleAddMember } = useGroupContext();
+
   const onSubmit = async () => {
     const result = await trigger();
     if (!result) {

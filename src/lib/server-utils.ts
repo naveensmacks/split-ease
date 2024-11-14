@@ -1,6 +1,23 @@
 import "server-only"; //installed with "npm i server-only@0.0.1", it will throw runTime error if we use any of the function in client component
 import prisma from "./db";
 import { sleep } from "./utils";
+import { redirect } from "next/navigation";
+import { auth } from "./auth";
+
+export async function checkAuth() {
+  //authentication check
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+  //after this line session.user cannot undefined
+
+  session.user.id;
+  //but for some peculiar reason, session.user is undefined after this
+  //code when it is called from action.ts, so we are overriding
+  //the type in next-auth.d.ts (globally)
+  return session;
+}
 
 export async function getGroupsByUserId(userId: string) {
   await sleep(2000);
@@ -56,6 +73,18 @@ export async function getUserByEmail(email: string) {
     },
   });
   return user;
+}
+
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findMany({
+    where: {
+      userId: {
+        equals: userId.toLowerCase(),
+        mode: "insensitive",
+      },
+    },
+  });
+  return user[0];
 }
 
 export async function getlistOfCurrencies() {

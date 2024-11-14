@@ -1,5 +1,6 @@
-import { ExpenseType, User } from "@prisma/client";
+import { ExpenseType } from "@prisma/client";
 import { z } from "zod";
+import Decimal from "decimal.js";
 export const groupFormSchema = z.object({
   groupName: z
     .string()
@@ -127,13 +128,17 @@ export const expenseSchema = z
   .refine(
     (data) => {
       // Custom validation to check if the sum of shares equals the amount
-      const totalAmount = data.shares.reduce(
-        (prevVal, curr) => prevVal + curr.amount,
-        0
-      );
-      console.log("totalAmount: ", totalAmount);
+      //use decimal to avoid rounding errors
+      const totalAmount = data.shares
+        .reduce(
+          (prevVal, curr) =>
+            new Decimal(prevVal).plus(new Decimal(curr.amount)),
+          new Decimal(0)
+        )
+        .toDecimalPlaces(2);
+      console.log("totalAmount: ", totalAmount.toNumber());
       console.log("data.amount: ", data.amount);
-      return totalAmount == data.amount;
+      return totalAmount.toNumber() === data.amount;
     },
     {
       path: ["amount"],
@@ -183,3 +188,90 @@ export const settleUpFormSchema = z
   );
 
 export type TSettleUpForm = z.infer<typeof settleUpFormSchema>;
+
+export const signUpSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(1, { message: "First name is required" })
+      .max(100, { message: "First name can't be longer than 100 characters" }),
+    lastName: z
+      .string()
+      .max(100, { message: "Last name can't be longer than 100 characters" }),
+    email: z
+      .string()
+      .min(1, { message: "Email is required" })
+      .max(100, { message: "Email can't be longer than 100 characters" })
+      .email({ message: "Please enter a valid email address" }),
+    password: z
+      .string()
+      .min(7, { message: "Password must be at least 7 characters" })
+      .max(100, { message: "Password can't be longer than 100 characters" })
+      .refine((val) => val !== "", { message: "Password is required" }),
+    confirmPassword: z.string(),
+  })
+  .refine(
+    (data) => {
+      // Custom validation to check if passwords match
+      return data.password === data.confirmPassword;
+    },
+    {
+      path: ["confirmPassword"],
+      message: "Passwords don't match",
+    }
+  );
+
+export type TSignUpForm = z.infer<typeof signUpSchema>;
+
+export const logInSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .refine((val) => val !== "", { message: "Password is required" }),
+});
+
+export type TLoginForm = z.infer<typeof logInSchema>;
+
+export const editAccountSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, { message: "First name is required" })
+    .max(100, { message: "First name can't be longer than 100 characters" }),
+  lastName: z
+    .string()
+    .max(100, { message: "Last name can't be longer than 100 characters" }),
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .max(100, { message: "Email can't be longer than 100 characters" })
+    .email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, "Enter password to update account details"),
+});
+
+export type TAccountForm = z.infer<typeof signUpSchema>;
+
+export const editPasswordSchema = z
+  .object({
+    currentPassword: z.string(),
+    newPassword: z
+      .string()
+      .min(7, { message: "Password must be at least 7 characters" })
+      .max(100, { message: "Password can't be longer than 100 characters" })
+      .refine((val) => val !== "", { message: "Password is required" }),
+    confirmNewPassword: z.string(),
+  })
+  .refine(
+    (data) => {
+      // Custom validation to check if passwords match
+      return data.newPassword === data.confirmNewPassword;
+    },
+    {
+      path: ["confirmNewPassword"],
+      message: "Passwords don't match",
+    }
+  );
+
+export type TEditPasswordForm = z.infer<typeof editPasswordSchema>;
