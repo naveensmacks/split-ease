@@ -22,6 +22,7 @@ import { signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import bcrypt from "bcryptjs";
+import { OptimizedTransaction } from "@/lib/types";
 
 // --- account actions ---
 export async function editPassword(userId: string, formData: unknown) {
@@ -427,6 +428,41 @@ export async function addPayment(
   //Db create
   return createNewExpense(groupId, userId, paidById, data, shares);
 }
+
+export async function settleAllBalances(
+  settleUpTransactions: OptimizedTransaction[],
+  userId: string,
+  groupId: string
+) {
+  let expenses = [];
+  //iterate over settleUpTransactions and create new expenses
+  for (let i = 0; i < settleUpTransactions.length; i++) {
+    const transaction = settleUpTransactions[i];
+    const expenseData: TExpenseForm = {
+      expenseType: ExpenseType.PAYMENT,
+      amount: transaction.amount,
+      expenseDescription: "SettleUp Payment",
+      expenseDate: new Date(),
+      paidById: transaction.ower.userId,
+      isSplitEqually: false,
+      shares: [
+        {
+          paidToId: transaction.owed.userId,
+          amount: transaction.amount,
+          share: 0.0,
+        },
+      ],
+    };
+    const { shares, paidById, ...data } = expenseData;
+    //Db create
+    expenses.push(
+      await createNewExpense(groupId, userId, paidById, data, shares)
+    );
+  }
+
+  return { isSuccess: true, data: expenses };
+}
+
 export async function addExpense(
   expense: unknown,
   userId: string,
@@ -463,6 +499,26 @@ export async function editExpense(
 
   //database mutation
   return updateExpense(expenseId, userId, paidById, data, shares);
+}
+
+export async function deleteExpense(expenseId: string) {
+  //database mutation
+  try {
+    //delete the shares and expense
+    await prisma.share.deleteMany({
+      where: { expenseId: expenseId },
+    });
+    await prisma.expense.delete({
+      where: { expenseId: expenseId },
+    });
+
+    return { isSuccess: true };
+  } catch (error) {
+    console.log(error);
+    return {
+      isSuccess: false,
+    };
+  }
 }
 
 // --- group actions ---

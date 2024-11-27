@@ -1,18 +1,30 @@
 "use client";
 import DisplayInitials from "@/components/display-initials";
 import H1 from "@/components/h1";
+import { MyAlertDialog } from "@/components/my-alert-dialog";
+import { Button } from "@/components/ui/button";
 import { useGroupContext } from "@/lib/hooks";
 import { transactions } from "@/lib/utils";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
-import React from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type SettleUpPageProps = {
   params: { slug: string };
 };
 export default function SettleUpPage({ params }: SettleUpPageProps) {
-  const { selectedGroup } = useGroupContext();
+  const { selectedGroup, handleSettleAllBalances } = useGroupContext();
   const trans = transactions(selectedGroup);
+  const router = useRouter();
+
+  const onClick = async () => {
+    if (trans) {
+      await handleSettleAllBalances(trans);
+    }
+    toast.success("All the balances have been settled successfully");
+    router.push(`/app/group/${params.slug}/balance`);
+  };
   return (
     <>
       <div className="p-1 flex justify-between items-center sm:hidden">
@@ -51,6 +63,23 @@ export default function SettleUpPage({ params }: SettleUpPageProps) {
             </div>
           ))}
       </div>
+      {trans && trans.length == 0 ? (
+        <div className="flex items-center justify-center m-3">
+          <H1 className="text-lg text-white">It's all settled up</H1>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center m-3">
+          <MyAlertDialog
+            title="Are you sure you want to settle all balances?"
+            content="Do this only if all balances are settled."
+            onSubmit={onClick}
+          >
+            <Button className="w-1/2 rounded-lg bg-opacity-85">
+              Settle all balances
+            </Button>
+          </MyAlertDialog>
+        </div>
+      )}
     </>
   );
 }

@@ -4,11 +4,13 @@ import {
   addgroup,
   addMemberToGroup,
   addPayment,
+  deleteExpense,
   editAccountDetails,
   editExpense,
   editGroup,
   editPassword,
   editPayment,
+  settleAllBalances,
 } from "@/actions/actions";
 import { useUserContext } from "@/lib/hooks";
 import {
@@ -17,6 +19,7 @@ import {
   ExpenseWithRelations,
   GroupEssential,
   GroupWithRelations,
+  OptimizedTransaction,
 } from "@/lib/types";
 import { calculateBalances, getDetailedBalance } from "@/lib/utils";
 import {
@@ -50,6 +53,9 @@ type GroupContextType = {
   selectedExpenseId: string | null;
   handleSelectedExpenseId: (expenseId: string) => void;
   getExpenseFromList: (expenseId: string) => ExpenseWithRelations | null;
+  handleSettleAllBalances: (
+    settleUpTransactions: OptimizedTransaction[]
+  ) => void;
   handleAddPayment: (
     newPayment: TSettleUpForm
   ) => ReturnType<typeof addPayment>;
@@ -62,6 +68,7 @@ type GroupContextType = {
   handleEditExpense: (
     updatedExpense: ExpenseEssential
   ) => ReturnType<typeof editExpense>;
+  handleDeleteExpense: (expenseId: string) => ReturnType<typeof deleteExpense>;
   detailedBalance: BalanceView[] | undefined;
   handleEditAccountDetails: (
     userDetails: TAccountForm
@@ -177,6 +184,38 @@ export default function GroupContextProvider({
     return actionData;
   };
 
+  const handleSettleAllBalances = async (
+    settleUpTransactions: OptimizedTransaction[]
+  ) => {
+    const actionData = await settleAllBalances(
+      settleUpTransactions,
+      user.userId,
+      selectedGroupId!
+    );
+    if (actionData.isSuccess && actionData.data) {
+      for (let i = 0; i < actionData.data.length; i++) {
+        const expense = actionData.data[i].data;
+        if (expense) {
+          setGroupList((prev) =>
+            prev.map((group) => {
+              if (group.groupId === selectedGroupId) {
+                const updatedGroup = {
+                  ...group,
+                  expenses: [...group.expenses, expense],
+                };
+                return {
+                  ...updatedGroup,
+                  balance: calculateBalances(updatedGroup),
+                };
+              }
+              return group;
+            })
+          );
+        }
+      }
+    }
+  };
+
   const handleEditPayment = async (updatedPayment: TSettleUpForm) => {
     console.log("handleEditPayment selectedExpenseId: ", selectedExpenseId);
     const actionData = await editPayment(
@@ -196,6 +235,30 @@ export default function GroupContextProvider({
       selectedExpenseId!
     );
     updateExpenseList(actionData, true);
+    return actionData;
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    const actionData = await deleteExpense(expenseId);
+    if (actionData.isSuccess) {
+      setGroupList((prev) =>
+        prev.map((group) => {
+          if (group.groupId === selectedGroupId) {
+            const updatedGroup = {
+              ...group,
+              expenses: group.expenses.filter(
+                (expense) => expense.expenseId !== expenseId
+              ),
+            };
+            return {
+              ...updatedGroup,
+              balance: calculateBalances(updatedGroup),
+            };
+          }
+          return group;
+        })
+      );
+    }
     return actionData;
   };
 
@@ -307,10 +370,12 @@ export default function GroupContextProvider({
         selectedExpenseId,
         handleSelectedExpenseId,
         getExpenseFromList,
+        handleSettleAllBalances,
         handleAddPayment,
         handleEditPayment,
         handleAddExpense,
         handleEditExpense,
+        handleDeleteExpense,
         detailedBalance,
         handleEditAccountDetails,
         handleEditPassword,
