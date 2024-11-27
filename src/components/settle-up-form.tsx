@@ -14,6 +14,8 @@ import { DatePicker } from "./date-picker";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { setServerFieldErrors } from "@/lib/utils";
+import { MyAlertDialog } from "./my-alert-dialog";
+import { useRouter } from "next/navigation";
 
 type SettleUpFormProps = {
   actionType: "add" | "edit";
@@ -34,8 +36,14 @@ export default function SettleUpForm({
   settleUpDescription,
   settleUpDate,
 }: SettleUpFormProps) {
-  const { selectedGroup, handleAddPayment, handleEditPayment } =
-    useGroupContext();
+  const router = useRouter();
+  const {
+    selectedGroup,
+    handleAddPayment,
+    handleEditPayment,
+    handleDeleteExpense,
+    selectedExpenseId,
+  } = useGroupContext();
   const isEditing = actionType === "edit";
   const payer = selectedGroup?.users.find((user) => user.userId === payerId);
 
@@ -101,6 +109,17 @@ export default function SettleUpForm({
       } else if ("message" in actionData && actionData.message) {
         toast.error(actionData.message);
       }
+    }
+  };
+  const onDelete = async () => {
+    if (!selectedExpenseId) return;
+    const actionData = await handleDeleteExpense(selectedExpenseId);
+
+    if (actionData.isSuccess) {
+      toast.success("Payment deleted successfully");
+      router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
+    } else {
+      toast.success("Error deleting payment. Try again later");
     }
   };
 
@@ -210,9 +229,30 @@ export default function SettleUpForm({
         )}
       </div>
 
-      <Button className="mt-5 self-end" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Recording a payment..." : "Save"}
-      </Button>
+      <div className="flex">
+        {isEditing && (
+          <MyAlertDialog
+            onSubmit={onDelete}
+            title="Delete Payment"
+            content="Are you sure you want to delete this payment?"
+          >
+            <Button
+              type="button"
+              variant="destructive"
+              className="mt-5 rounded-lg mx-auto w-1/3 "
+            >
+              Delete
+            </Button>
+          </MyAlertDialog>
+        )}
+        <Button
+          className="mt-5 rounded-lg mx-auto w-1/3"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Recording a payment..." : "Save"}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -134,7 +134,7 @@ export default function BalancePageProps({ params }: BalancePageProps) {
       <div className="flex items-center justify-center mb-10">
         <Button className="w-1/2 rounded-lg bg-opacity-85" asChild>
           <Link href={`/app/group/${params.slug}/balance/settleup`}>
-            Settle all balance
+            Settle all balances
           </Link>
         </Button>
       </div>

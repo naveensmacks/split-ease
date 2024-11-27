@@ -17,6 +17,7 @@ import Decimal from "decimal.js";
 import { toast } from "sonner";
 import { setServerFieldErrors } from "@/lib/utils";
 import { ExpenseWithRelations } from "@/lib/types";
+import { MyAlertDialog } from "./my-alert-dialog";
 
 type ExpenseFormProps = {
   type: "create" | "edit";
@@ -30,6 +31,7 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     getExpenseFromList,
     handleAddExpense,
     handleEditExpense,
+    handleDeleteExpense,
   } = useGroupContext();
   const { user } = useUserContext();
   const router = useRouter();
@@ -320,6 +322,18 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
     }
   };
 
+  const onDelete = async () => {
+    if (!selectedExpenseId) return;
+    const actionData = await handleDeleteExpense(selectedExpenseId);
+
+    if (actionData.isSuccess) {
+      toast.success("Expense deleted successfully");
+      router.push(`/app/group/${selectedGroup?.groupId}/expenses`);
+    } else {
+      toast.success("Error deleting expense. Try again later");
+    }
+  };
+
   return (
     <form
       className="flex flex-col p-4 rounded-lg bg-white border-b border-black/10 text-black gap-3"
@@ -516,13 +530,31 @@ export default function ExpenseForm({ type }: ExpenseFormProps) {
             </div>
           ))}
       </div>
-      <Button
-        className="rounded-lg mx-auto w-1/2 bg-opacity-85"
-        type="submit"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Adding Expense..." : "Save"}
-      </Button>
+      <div className="flex">
+        {isEditing && (
+          <MyAlertDialog
+            onSubmit={onDelete}
+            title="Delete Expense"
+            content="Are you sure you want to delete this expense?"
+          >
+            <Button
+              type="button"
+              variant="destructive"
+              className="rounded-lg mx-auto w-1/3 "
+            >
+              Delete
+            </Button>
+          </MyAlertDialog>
+        )}
+
+        <Button
+          className="rounded-lg mx-auto w-1/3 bg-opacity-85"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Adding Expense..." : "Save"}
+        </Button>
+      </div>
     </form>
   );
 }
