@@ -65,7 +65,7 @@ export default function SettleUpPage({ params }: SettleUpPageProps) {
       </div>
       {trans && trans.length == 0 ? (
         <div className="flex items-center justify-center m-3">
-          <H1 className="text-lg text-white">It's all settled up</H1>
+          <H1 className="text-lg text-white">It&apos;s all settled up</H1>
         </div>
       ) : (
         <div className="flex items-center justify-center m-3">
