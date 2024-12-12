@@ -1,12 +1,14 @@
 "use client";
 import AddExpenseButton from "@/components/add-expense-btn";
 import DisplayInitials from "@/components/display-initials";
+import ExpenseSearchForm from "@/components/expense-search-form";
 import { useGroupContext, useUserContext } from "@/lib/hooks";
 import { ExpenseWithRelations } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ExpenseType } from "@prisma/client";
 import Decimal from "decimal.js";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type ExpensesPageProps = {
   params: { slug: string };
@@ -15,7 +17,12 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   const { selectedGroup } = useGroupContext();
   const { user } = useUserContext();
   const userId = user.userId;
-  const expenses = selectedGroup?.expenses;
+  //sort expenses by date
+  let sortedExpenses = selectedGroup?.expenses?.sort(
+    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+  );
+  const [expenses, setExpenses] = useState(sortedExpenses);
+  const [allExpenses, setAllExpenses] = useState(expenses);
   const currencyType = selectedGroup?.currencyType;
 
   const getYourBalance = (expense: ExpenseWithRelations) => {
@@ -56,11 +63,30 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
       </div>
     );
   };
+
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      let sortedExpenses = selectedGroup?.expenses?.sort(
+        (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+      );
+      setExpenses(sortedExpenses);
+      setAllExpenses(sortedExpenses);
+    };
+    fetchExpenses();
+  }, [selectedGroup]); // empty dependency array means this effect runs only once on mount
+
   return (
     <>
       <div className="fixed sm:hidden right-4 bottom-14">
         <AddExpenseButton />
       </div>
+
+      <ExpenseSearchForm
+        allExpenses={allExpenses}
+        expenses={expenses}
+        setExpenses={setExpenses}
+      />
+
       {expenses && expenses.length > 0 ? (
         expenses.map((item) => {
           if (ExpenseType.PAYMENT === item.expenseType) {
@@ -132,7 +158,7 @@ function EmptyView({ selectedGroupId }: { selectedGroupId: string }) {
         href={`/app/group/${selectedGroupId}/expenses/add`}
         className="h-15 max-w-96 p-5 flex items-center justify-center"
       >
-        You don't have any expenses. Add one now!
+        You don&apos;t have any expenses. Add one now!
       </Link>
     </div>
   );
