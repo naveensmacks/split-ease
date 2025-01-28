@@ -4,7 +4,7 @@ import DisplayInitials from "@/components/display-initials";
 import ExpenseSearchForm from "@/components/expense-search-form";
 import { useGroupContext, useUserContext } from "@/lib/hooks";
 import { ExpenseWithRelations } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { ExpenseType } from "@prisma/client";
 import Decimal from "decimal.js";
 import Link from "next/link";
@@ -94,7 +94,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               <Link
                 href={`/app/group/${params.slug}/expenses/${item.expenseId}`}
                 key={item.expenseId}
-                className="flex px-4 py-5 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
+                className="flex px-4 py-3 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
               >
                 <DisplayInitials
                   firstName={item.paidByUser.firstName}
@@ -102,13 +102,14 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                 />
                 <div className="flex flex-col grow mx-3">
                   <div>{"Money Transfer"}</div>
-                  <div className="text-black/50 flex text-sm">
+                  <div className="text-black/50 flex flex-col text-sm">
                     <span className="truncate max-w-[180px] sm:max-w-[200px]">
                       Paid by&nbsp;
                       {item.paidByUser.firstName +
                         " " +
                         item.paidByUser.lastName}
                     </span>
+                    <span>{formatDate(new Date(item.expenseDate))}</span>
                   </div>
                 </div>
                 <div className="text-black/50 text-sm flex flex-col items-end">
@@ -122,7 +123,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
             <Link
               href={`/app/group/${params.slug}/expenses/${item.expenseId}`}
               key={item.expenseId}
-              className="flex px-4 py-5 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
+              className="flex px-4 py-3 sm:py-3  sm:my-2 bg-white sm:rounded-lg items-center text-black border-b border-black/10"
             >
               <DisplayInitials
                 firstName={item.paidByUser.firstName}
@@ -130,11 +131,12 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               />
               <div className="flex flex-col grow mx-3">
                 <div>{item.expenseDescription}</div>
-                <div className="text-black/50 flex text-sm">
+                <div className="text-black/50 flex flex-col text-sm">
                   <span className="truncate max-w-[180px] sm:max-w-[200px]">
                     Paid by&nbsp;
                     {item.paidByUser.firstName + " " + item.paidByUser.lastName}
                   </span>
+                  <span>{formatDate(new Date(item.expenseDate))}</span>
                 </div>
               </div>
               <div className="text-black/50 text-sm flex flex-col items-end">
