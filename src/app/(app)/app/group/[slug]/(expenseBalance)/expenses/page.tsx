@@ -2,6 +2,8 @@
 import AddExpenseButton from "@/components/add-expense-btn";
 import DisplayInitials from "@/components/display-initials";
 import ExpenseSearchForm from "@/components/expense-search-form";
+import PaginationControls from "@/components/pagination-controls";
+import SpaceCreatorDiv from "@/components/space-creater-div";
 import { useGroupContext, useUserContext } from "@/lib/hooks";
 import { ExpenseWithRelations } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -14,6 +16,7 @@ type ExpensesPageProps = {
   params: { slug: string };
 };
 export default function ExpensesPage({ params }: ExpensesPageProps) {
+  const isPagenated = true;
   const { selectedGroup } = useGroupContext();
   const { user } = useUserContext();
   const userId = user.userId;
@@ -21,8 +24,18 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   let sortedExpenses = selectedGroup?.expenses?.sort(
     (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
   );
-  const [expenses, setExpenses] = useState(sortedExpenses);
-  const [allExpenses, setAllExpenses] = useState(expenses);
+  const ITEMS_PER_PAGE = 15;
+  const PAGINATION_RANGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
+  const slicedItems = sortedExpenses?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  console.log("slicedItems length: ", slicedItems?.length);
+  const [expenses, setExpenses] = useState(
+    isPagenated ? slicedItems : sortedExpenses
+  );
+  const [allExpenses, setAllExpenses] = useState(sortedExpenses);
   const currencyType = selectedGroup?.currencyType;
 
   const getYourBalance = (expense: ExpenseWithRelations) => {
@@ -69,11 +82,16 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
       let sortedExpenses = selectedGroup?.expenses?.sort(
         (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
       );
-      setExpenses(sortedExpenses);
+      const slicedItems = sortedExpenses?.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      );
+      console.log("slicedItems length: ", slicedItems?.length);
+      setExpenses(isPagenated ? slicedItems : sortedExpenses);
       setAllExpenses(sortedExpenses);
     };
     fetchExpenses();
-  }, [selectedGroup]); // empty dependency array means this effect runs only once on mount
+  }, [selectedGroup, currentPage, isPagenated]); // empty dependency array means this effect runs only once on mount
 
   return (
     <>
@@ -148,6 +166,18 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
         })
       ) : (
         <EmptyView selectedGroupId={params.slug} />
+      )}
+      {isPagenated && allExpenses && allExpenses.length > ITEMS_PER_PAGE && (
+        <div className="py-6 w-11/12 sm:w-6/12 mx-auto">
+          <PaginationControls
+            items={allExpenses}
+            itemsPerPage={ITEMS_PER_PAGE}
+            range={PAGINATION_RANGE}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
+          <SpaceCreatorDiv />
+        </div>
       )}
     </>
   );
