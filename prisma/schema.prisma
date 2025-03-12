@@ -22,6 +22,7 @@ model User {
   firstName         String
   lastName          String?
   isRegistered      Boolean   @default(true)
+  emailVerified     DateTime?
   groups            Group[]   @relation("UserGroups")
   shares            Share[]
   balances          Balance[]
@@ -31,6 +32,14 @@ model User {
   expensesAddedBy   Expense[] @relation("AddedByUser")
   expensesPaidBy    Expense[] @relation("PaidByUser")
   expensesUpdatedBy Expense[] @relation("UpdatedByUser")
+}
+
+model VerificationToken {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  token             String   @unique
+  expires           DateTime
+  isForRegistration Boolean
 }
 
 model Group {

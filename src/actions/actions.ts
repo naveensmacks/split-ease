@@ -5,6 +5,8 @@ import {
   getGroupsByUserId,
   getUserByEmail,
   getUserById,
+  getVerificationTokenByEmail,
+  getVerificationTokenByToken,
   isMemberOfGroup,
 } from "@/lib/server-utils";
 import {
@@ -16,6 +18,7 @@ import {
   TExpenseForm,
   editAccountSchema,
   editPasswordSchema,
+  resetPasswordSchema,
 } from "@/lib/validation";
 import { ExpenseType, Prisma } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
@@ -23,6 +26,11 @@ import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import bcrypt from "bcryptjs";
 import { OptimizedTransaction } from "@/lib/types";
+import { generateVerificationToken, verifyToken } from "@/lib/token";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/lib/email-utils";
 
 // --- account actions ---
 export async function editPassword(userId: string, formData: unknown) {
@@ -135,7 +143,7 @@ export async function editAccountDetails(userId: string, userDetails: unknown) {
     if (emailExists) {
       return {
         isSuccess: false,
-        fieldErrors: { email: ["Email already registered"] },
+        fieldErrors: { email: ["An account with this email already exists."] },
       };
     }
   }
@@ -173,6 +181,7 @@ export async function signup(prevState: unknown, formData: unknown) {
   console.log("formData: ", formData);
   if (!(formData instanceof FormData)) {
     return {
+      isSuccess: false,
       message: "Invalid form Data..",
     };
   }
@@ -184,6 +193,7 @@ export async function signup(prevState: unknown, formData: unknown) {
   const validatedFormDataObject = signUpSchema.safeParse(formDataObject);
   if (!validatedFormDataObject.success) {
     return {
+      isSuccess: false,
       message: "Invalid form Data.",
     };
   }
@@ -203,15 +213,48 @@ export async function signup(prevState: unknown, formData: unknown) {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
-        return {
-          message: "Email already exists.",
-        };
+        const emailExists = await getUserByEmail(email);
+        if (emailExists) {
+          if (emailExists.emailVerified) {
+            return {
+              isSuccess: false,
+              message: "An account with this email already exists.",
+            };
+          } else {
+            // Check if a token already exists for the user
+            const existingToken = await getVerificationTokenByEmail(
+              email,
+              true
+            );
+
+            if (existingToken) {
+              return {
+                isSuccess: false,
+                message:
+                  "Awaiting your email verification. Please check your inbox.",
+              };
+            }
+          }
+        }
       }
     }
   }
-  //we can send formData Directly instead of converting to json object, next-auth supports this
-  //means next auth wil convert it to object automatically
-  await signIn("credentials", formData);
+  const emailExists = await getUserByEmail(email);
+  if (emailExists) {
+    // Generate a verification token
+    const verificationToken = await generateVerificationToken(email, true);
+
+    // Send verification email
+    await sendVerificationEmail(emailExists, verificationToken.token);
+
+    //we can send formData Directly instead of converting to json object, next-auth supports this
+    //means next auth wil convert it to object automatically
+    //await signIn("credentials", formData);
+    return {
+      isSuccess: true,
+      message: "Verification email is sent to your inbox, please verify.",
+    };
+  }
 }
 
 export async function login(prevState: unknown, formData: unknown) {
@@ -228,15 +271,51 @@ export async function login(prevState: unknown, formData: unknown) {
     //no code after this line executes as redirects happens at the SignIn function itself
   } catch (error) {
     if (error instanceof AuthError) {
+      console.log("error type: ", error.type);
       switch (error.type) {
         case "CredentialsSignin":
           return {
             message: "Invalid credentials.",
           };
         default:
-          return {
-            message: "Could not log In.",
-          };
+          const email = formData.get("email") as string;
+          const user = await getUserByEmail(email);
+          if (user && !user.emailVerified) {
+            const existingToken = await getVerificationTokenByEmail(
+              email,
+              true
+            );
+            if (existingToken) {
+              const hasExpired = new Date(existingToken.expires) < new Date();
+
+              if (hasExpired) {
+                // Generate a new verification token
+                const newToken = await generateVerificationToken(email, true);
+                // Send verification email
+                await sendVerificationEmail(user, newToken.token);
+                return {
+                  message:
+                    "Your token has expired. We’ve sent a new verification email. Check your inbox.",
+                };
+              } else {
+                return {
+                  message:
+                    "Awaiting your email verification. Please check your inbox.",
+                };
+              }
+            } else {
+              // This happens on db corruption
+              // Generate a verification token
+              const newToken = await generateVerificationToken(email, true);
+
+              // Send verification email
+              await sendVerificationEmail(user, newToken.token);
+              return {
+                message:
+                  "We’ve sent you a new verification email. Check your inbox",
+              };
+            }
+          }
       }
     }
 
@@ -720,4 +799,190 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
       };
     }
   }
+}
+
+export const newVerification = async (token: string) => {
+  const existingToken = await getVerificationTokenByToken(token, true);
+  console.log("existingToken: ", existingToken);
+  const tokenVerification = await verifyToken(token);
+  console.log("tokenVerification: ", tokenVerification);
+
+  if (!existingToken) {
+    console.log("if block ");
+    if (tokenVerification.isJwtVerified || tokenVerification.isExpired) {
+      const email = tokenVerification.email!;
+      const existingUser = await getUserByEmail(email);
+      console.log("existingUser: ", existingUser);
+      if (!existingUser) {
+        return { error: "User not found. Try signing up again." };
+      } else if (existingUser.emailVerified) {
+        return { success: "Email already verified, please proceed with login" };
+      } else {
+        // this part will hit on tokenVerification.isExpired or DB corruption(tokenVerification.isJwtVerified)
+
+        //check if that mail has an exising token valid token, if yes then donot send new email, ask to use the existing one
+        const tokenForEmail = await getVerificationTokenByEmail(email, true);
+        if (tokenForEmail) {
+          const hasExpired = new Date(tokenForEmail.expires) < new Date();
+
+          if (!hasExpired) {
+            return {
+              error:
+                "Please use the latest email sent to you to verify your account.",
+            };
+          }
+        }
+
+        // Generate a verification token
+        const verificationToken = await generateVerificationToken(email, true);
+
+        // Send verification email
+        await sendVerificationEmail(existingUser, verificationToken.token);
+        return {
+          error: tokenVerification.isExpired
+            ? tokenVerification.message
+            : "Error verifying the token, new verification link has been sent to your email",
+        };
+      }
+    } else {
+      return { error: tokenVerification.message };
+    }
+  } else {
+    console.log("else block ");
+    const hasExpired = new Date(existingToken.expires) < new Date();
+
+    const existingUser = await getUserByEmail(existingToken.email);
+
+    if (!existingUser) {
+      return { error: "User not found. Try signing up again." };
+    }
+
+    if (hasExpired) {
+      const email = tokenVerification.email!;
+      // Generate a verification token
+      const verificationToken = await generateVerificationToken(email, true);
+
+      // Send verification email
+      await sendVerificationEmail(existingUser, verificationToken.token);
+
+      return {
+        success:
+          "Your verification link has expired. We’ve sent a new one to your email.",
+      };
+    }
+
+    await prisma.user.update({
+      where: {
+        userId: existingUser.userId,
+      },
+      data: {
+        emailVerified: new Date(),
+        email: existingToken.email,
+      },
+    });
+
+    await prisma.verificationToken.delete({
+      where: {
+        id: existingToken.id,
+      },
+    });
+
+    return { success: "Email verified" };
+  }
+};
+
+export async function forgotPassword(prevState: any, formData: FormData) {
+  const email = formData.get("email") as string;
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return {
+      isSuccess: false,
+      message: "Email not registered. Please enter a registered email ID.",
+    };
+  } else {
+    const existingToken = await getVerificationTokenByEmail(email, false);
+    if (existingToken) {
+      const hasExpired = new Date(existingToken.expires) < new Date();
+      if (!hasExpired) {
+        return {
+          isSuccess: false,
+          message:
+            "Please use the latest email we sent to reset your password.",
+        };
+      }
+    }
+  }
+  //if (!user.emailVerified) no need to check email verification here
+  //as lets consider  reseting password through link as an email verfication
+
+  //we are doing jwt verification so any random generation token is enough
+  //as we are doing only db record check(if token exist for email)
+  //but jwt token just to avoid installing a library for installing a library to generate random token
+  const resetToken = await generateVerificationToken(email, false);
+  await sendPasswordResetEmail(user, resetToken.token);
+  return {
+    isSuccess: true,
+    message: "A reset password link has been sent to your email.",
+  };
+}
+
+export async function resetPassword(
+  resetPasswordToken: string,
+  formDataObject: unknown
+) {
+  const validatedformDataObject = resetPasswordSchema.safeParse(formDataObject);
+  if (!validatedformDataObject.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedformDataObject.error.flatten().fieldErrors,
+    };
+  }
+
+  const formData = validatedformDataObject.data;
+
+  const resetToken = await getVerificationTokenByToken(
+    resetPasswordToken,
+    false
+  );
+  if (!resetToken) {
+    return {
+      isSuccess: false,
+      message:
+        "Invalid reset password link. Please request forgot password again",
+    };
+  }
+  const hasExpired = new Date(resetToken.expires) < new Date();
+  if (hasExpired) {
+    return {
+      isSuccess: false,
+      message:
+        "Reset password link has expired. Please request forgot password again",
+    };
+  }
+  const user = await getUserByEmail(resetToken.email);
+  if (!user) {
+    return {
+      isSuccess: false,
+      message: "User not found, contact support team",
+    };
+  }
+
+  await prisma.user.update({
+    where: {
+      userId: user.userId,
+    },
+    data: {
+      hashedPassword: await bcrypt.hash(formData.newPassword as string, 10),
+    },
+  });
+  await prisma.verificationToken.delete({
+    where: {
+      id: resetToken.id,
+    },
+  });
+  return {
+    isSuccess: true,
+    message:
+      "Password reset successful. You can now log in with your new password.",
+  };
 }
