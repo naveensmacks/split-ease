@@ -14,6 +14,18 @@ export const config = {
     Credentials({
       //By return null next-auth will throw error which can be caught at actions function which calls sign in
       //all the errors thrown from this function will be of error type "CredentialsSignin"
+      /**
+       * Order of Execution: 1
+       * When it Runs:
+       *  When a user submits login form
+       *
+       * What It Does:
+       *  Validates credentials
+       *
+       * Possible Outcomes:
+       *  ✅ Returns user if valid, ❌ Returns null if invalid
+       *
+       */
       async authorize(credentials) {
         //runs on login
 
@@ -58,6 +70,46 @@ export const config = {
     }),
   ],
   callbacks: {
+    /**
+     * Order of Execution: 2
+     * When it Runs:
+     *  After successful authentication(1)
+     *
+     * What It Does:
+     *  Extra validation (e.g., check email verification)
+     *
+     * Possible Outcomes:
+     *  ✅ Returns true (continue), ❌ Returns false (deny login)
+     *
+     */
+    async signIn({ user, account }) {
+      if (account?.provider !== "credentials") {
+        return true;
+      }
+
+      console.log("user in signIn: ", user);
+      const existingUser = await getUserByEmail(user.email as string);
+
+      if (!existingUser?.emailVerified) {
+        //AuthorizedCallbackError will be thrown and handled by switch default in login method in action.ts
+        return false;
+      }
+
+      return true;
+    },
+
+    /**
+     * Order of Execution: 5
+     * When it Runs:
+     *  On every request to a protected route
+     *
+     * What It Does:
+     *  Grants or denies access. Or rerirects to callBackUrl or homepage(app/groups)
+     *
+     * Possible Outcomes:
+     * ✅ Allows access, ❌ Redirects
+     *
+     */
     authorized: ({ auth, request }) => {
       //runs on every request with middleware
       const isLoggedIn = Boolean(auth?.user);
@@ -92,6 +144,18 @@ export const config = {
     },
 
     //by default token contains only email. So we are adding id to it
+    /**
+     * Order of Execution: 3
+     * When it Runs:
+     *  After signIn(2) and during session updates
+     *
+     * What It Does:
+     *  Adds userId to JWT token
+     *
+     * Possible Outcomes:
+     *  ✅ Stores token with user details
+     *
+     */
     jwt: async ({ token, user, trigger }) => {
       //jwt callback will be called on update() from useSession hook
       if (trigger === "update") {
@@ -115,6 +179,18 @@ export const config = {
     },
 
     //by default session contains only email. So we are adding id to it fetching token we set in jwt
+    /**
+     * Order of Execution: 4
+     * When it Runs:
+     *  When useSession() is called
+     *
+     * What It Does:
+     *  Adds userId to session object
+     *
+     * Possible Outcomes:
+     *  ✅ Session object created
+     *
+     */
     session: ({ session, token }) => {
       if (session.user) {
         session.user.id = token.userId;

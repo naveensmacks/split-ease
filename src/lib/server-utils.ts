@@ -161,3 +161,39 @@ export async function getGroupByGroupId(groupId: string) {
   });
   return group;
 }
+
+export const getVerificationTokenByEmail = async (
+  email: string,
+  isForRegistration: boolean
+) => {
+  try {
+    const verificationToken = await prisma.verificationToken.findFirst({
+      where: {
+        email: email,
+        isForRegistration: isForRegistration,
+      },
+    });
+
+    return verificationToken;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getVerificationTokenByToken = async (
+  token: string,
+  isForRegistration: boolean
+) => {
+  try {
+    const verificationToken = await prisma.verificationToken.findFirst({
+      where: {
+        token: token,
+        isForRegistration: isForRegistration,
+      },
+    });
+
+    return verificationToken;
+  } catch (error) {
+    console.log(error);
+  }
+};

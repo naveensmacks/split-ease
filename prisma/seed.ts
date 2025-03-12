@@ -13,6 +13,7 @@ const usersData: Prisma.UserCreateInput[] = [
     firstName: "John",
     lastName: "Doe",
     isRegistered: true,
+    emailVerified: new Date(),
   },
   {
     email: "user2@example.com",
@@ -20,6 +21,7 @@ const usersData: Prisma.UserCreateInput[] = [
     firstName: "Jane",
     lastName: "Smith",
     isRegistered: true,
+    emailVerified: new Date(),
   },
   {
     email: "user3@example.com",
@@ -27,6 +29,7 @@ const usersData: Prisma.UserCreateInput[] = [
     firstName: "Alice",
     lastName: "Brown",
     isRegistered: true,
+    emailVerified: new Date(),
   },
   {
     email: "user4@example.com",
@@ -34,6 +37,7 @@ const usersData: Prisma.UserCreateInput[] = [
     firstName: "Bob",
     lastName: "Davis",
     isRegistered: true,
+    emailVerified: new Date(),
   },
   {
     email: "user5@example.com",
@@ -41,6 +45,7 @@ const usersData: Prisma.UserCreateInput[] = [
     firstName: "Charlie",
     lastName: "Wilson",
     isRegistered: true,
+    emailVerified: new Date(),
   },
 ];
 

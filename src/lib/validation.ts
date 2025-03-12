@@ -1,6 +1,7 @@
 import { ExpenseType } from "@prisma/client";
 import { z } from "zod";
 import Decimal from "decimal.js";
+import { forgotPassword } from "@/actions/actions";
 export const groupFormSchema = z.object({
   groupName: z
     .string()
@@ -205,7 +206,7 @@ export const signUpSchema = z
       .email({ message: "Please enter a valid email address" }),
     password: z
       .string()
-      .min(7, { message: "Password must be at least 7 characters" })
+      .min(7, { message: "Password must be at least 7 characters long" })
       .max(100, { message: "Password can't be longer than 100 characters" })
       .refine((val) => val !== "", { message: "Password is required" }),
     confirmPassword: z.string(),
@@ -258,7 +259,7 @@ export const editPasswordSchema = z
     currentPassword: z.string(),
     newPassword: z
       .string()
-      .min(7, { message: "Password must be at least 7 characters" })
+      .min(7, { message: "Password must be at least 7 characters long" })
       .max(100, { message: "Password can't be longer than 100 characters" })
       .refine((val) => val !== "", { message: "Password is required" }),
     confirmNewPassword: z.string(),
@@ -275,3 +276,34 @@ export const editPasswordSchema = z
   );
 
 export type TEditPasswordForm = z.infer<typeof editPasswordSchema>;
+
+export type TForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Please enter a valid email address" }),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(7, { message: "Password must be at least 7 characters long" })
+      .max(100, { message: "Password can't be longer than 100 characters" })
+      .refine((val) => val !== "", { message: "Password is required" }),
+    confirmNewPassword: z.string(),
+  })
+  .refine(
+    (data) => {
+      // Custom validation to check if passwords match
+      return data.newPassword === data.confirmNewPassword;
+    },
+    {
+      path: ["confirmNewPassword"],
+      message: "Passwords don't match",
+    }
+  );
+
+export type TResetPasswordForm = z.infer<typeof resetPasswordSchema>;

@@ -8,6 +8,9 @@ import { useForm } from "react-hook-form";
 import { signUpSchema, TSignUpForm } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PasswordInput } from "./ui/password-input";
+import Link from "next/link";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 type AuthFormProps = {
   type: "login" | "signup";
@@ -24,6 +27,14 @@ export default function AuthForm({ type }: AuthFormProps) {
   } = useForm<TSignUpForm>({
     resolver: zodResolver(signUpSchema),
   });
+  useEffect(() => {
+    if (signUpError) {
+      toast.error(signUpError.message);
+    }
+    if (loginError) {
+      toast.error(loginError.message);
+    }
+  }, [signUpError, loginError]);
   return (
     <form
       action={async (formData) => {
@@ -43,7 +54,9 @@ export default function AuthForm({ type }: AuthFormProps) {
               First Name
             </Label>
             <Input
-              className="border-zinc-400 sm:text-lg"
+              className={`border-zinc-400 sm:text-lg ${
+                errors.firstName ? "border-red-500" : ""
+              }`}
               type="text"
               id="firstName"
               {...register("firstName")}
@@ -59,7 +72,9 @@ export default function AuthForm({ type }: AuthFormProps) {
               Last Name
             </Label>
             <Input
-              className="border-zinc-400 sm:text-lg"
+              className={`border-zinc-400 sm:text-lg ${
+                errors.lastName ? "border-red-500" : ""
+              }`}
               type="text"
               {...register("lastName")}
               id="lastName"
@@ -77,7 +92,9 @@ export default function AuthForm({ type }: AuthFormProps) {
           Email
         </Label>
         <Input
-          className="border-zinc-400 sm:text-xs"
+          className={`border-zinc-400 sm:text-lg ${
+            errors.email ? "border-red-500" : ""
+          }`}
           type="email"
           {...register("email")}
           id="email"
@@ -93,7 +110,9 @@ export default function AuthForm({ type }: AuthFormProps) {
           Password
         </Label>
         <PasswordInput
-          className="border-zinc-400 sm:text-lg"
+          className={`border-zinc-400 sm:text-lg ${
+            errors.password ? "border-red-500" : ""
+          }`}
           {...register("password")}
           id="password"
           {...(type === "login" ? { required: true } : undefined)}
@@ -102,7 +121,8 @@ export default function AuthForm({ type }: AuthFormProps) {
           <p className="text-red-500/85 text-xs">{errors.password.message}</p>
         )}
       </div>
-      {type === "signup" && (
+
+      {type === "signup" ? (
         <div className="mb-4 mt-2 space-y-1">
           <Label htmlFor="confirmPassword" className="sm:text-lg">
             Confirm Password
@@ -111,7 +131,7 @@ export default function AuthForm({ type }: AuthFormProps) {
             className="border-zinc-400 sm:text-lg"
             type="password"
             {...register("confirmPassword")}
-            id="password"
+            id="confirmPassword"
           />
           {errors.confirmPassword && (
             <p className="text-red-500/85 text-xs">
@@ -119,10 +139,22 @@ export default function AuthForm({ type }: AuthFormProps) {
             </p>
           )}
         </div>
+      ) : (
+        <p>
+          <Link href="/forgot-password" className="text-sm text-primecolor/85">
+            Forgot Password?
+          </Link>
+        </p>
       )}
       <AuthFormBtn>{type === "login" ? "Log In" : "Sign Up"} </AuthFormBtn>
       {signUpError && (
-        <p className="text-red-500/85 text-xs">{signUpError.message}</p>
+        <p
+          className={`${
+            signUpError.isSuccess ? "text-primecolor/85" : "text-red-500/85"
+          } text-xs`}
+        >
+          {signUpError.message}
+        </p>
       )}
       {loginError && (
         <p className="text-red-500/85 text-xs">{loginError.message}</p>
