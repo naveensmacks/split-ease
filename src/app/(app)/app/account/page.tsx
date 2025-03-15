@@ -22,7 +22,7 @@ export default async function Page() {
         editRoute={`/app/account/edit`}
       />
       <div className="w-full flex flex-col gap-2 items-center">
-        <div className="flex w-14 h-14 bg-accountcolor rounded-full text-white text-4xl justify-center items-center">
+        <div className="flex w-14 h-14 bg-accountcolor rounded-full text-white text-3xl justify-center items-center">
           {extractInitials(firstName, lastName)}
         </div>
         <H1>
