@@ -92,7 +92,7 @@ export default function GroupForm({
   return (
     <>
       <form
-        className="relative flex flex-col bg-white sm:rounded-lg px-5 py-4 sm:my-2 border-b border-black/10 min-h-40"
+        className="relative flex flex-col bg-white rounded-lg px-5 py-4 sm:my-2 border-b border-black/10 min-h-40"
         onSubmit={handleSubmit(onSubmit)}
       >
         {isSubmitting && <Spinner />}
