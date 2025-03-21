@@ -26,6 +26,33 @@ export async function sendVerificationEmail(user: User, token: string) {
   }
 }
 
+export async function sendVerificationEmailForEmailChange(
+  user: User,
+  email: string,
+  token: string
+) {
+  const confirmationLink = `${process.env.NEXTAUTH_URL_INTERNAL}/change-email?token=${token}`;
+
+  try {
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM!,
+      to: email,
+      subject: "Splitease - Change your email",
+      html: `
+        <p>Hello ${user.firstName} ${user.lastName},</p>
+        <p>Click the link below to change your email:</p>
+        <a href="${confirmationLink}">${confirmationLink}</a>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    });
+
+    console.log("Email change email sent to:", email);
+  } catch (error) {
+    console.error("Failed to send email change email:", error);
+    throw new Error("Error sending email change email");
+  }
+}
+
 export async function sendPasswordResetEmail(user: User, token: string) {
   const resetLink = `${process.env.NEXTAUTH_URL_INTERNAL}/reset-password?token=${token}`;
 

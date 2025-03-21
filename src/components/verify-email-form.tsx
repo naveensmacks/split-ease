@@ -41,11 +41,11 @@ const VerifyEmailForm = () => {
         console.error(error);
         setError("An unexpected error occurred");
       });
-  }, []);
+  }, [error, success, token]);
 
   useEffect(() => {
     onSubmit();
-  }, []);
+  }, [onSubmit]);
 
   return (
     <CardWrapper

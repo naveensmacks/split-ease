@@ -4,6 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import { NextResponse } from "next/server";
 import { getUserByEmail } from "./server-utils";
 import { logInSchema } from "./validation";
+import GoogleProvider from "next-auth/providers/google";
+import prisma from "@/lib/db";
 
 export const config = {
   pages: {
@@ -27,6 +29,7 @@ export const config = {
        *
        */
       async authorize(credentials) {
+        console.log("authorize: ", credentials);
         //runs on login
 
         //validation
@@ -68,6 +71,11 @@ export const config = {
         return { ...user, id: user.userId };
       },
     }),
+    //Google Provider
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
   ],
   callbacks: {
     /**
@@ -83,8 +91,41 @@ export const config = {
      *
      */
     async signIn({ user, account }) {
+      console.log("signIn: user ", user);
+      console.log("signIn: account ", account);
       if (account?.provider !== "credentials") {
-        return true;
+        if (account?.provider === "google") {
+          console.log("Google User Signing In: ", user);
+
+          // Check if the user already exists
+          let existingUser = await getUserByEmail(user.email as string);
+
+          if (!existingUser) {
+            // ✅ If new Google user, create an account with no password
+            existingUser = await prisma.user.create({
+              data: {
+                firstName: user.name?.split(" ")[0] || "Google",
+                lastName: user.name?.split(" ")[1] || "User",
+                email: user.email!.toLowerCase(),
+                hashedPassword: null, // ✅ No password needed for Google users
+                emailVerified: new Date(),
+              },
+            });
+          } else {
+            // ✅ If user exists, update emailVerified if null
+            if (!existingUser.emailVerified) {
+              await prisma.user.update({
+                where: { userId: existingUser.userId },
+                data: { emailVerified: new Date() },
+              });
+            }
+          }
+
+          // ✅ Ensure `user.id` is correctly pointing to DB userId for JWT callback
+          user.id = existingUser.userId;
+
+          return true;
+        }
       }
 
       console.log("user in signIn: ", user);
@@ -125,7 +166,16 @@ export const config = {
       );
 
       if (isLoggedIn) {
-        if (isTryingToAccessApp) {
+        if (
+          isTryingToAccessApp ||
+          request.nextUrl.pathname.includes("change-email")
+        ) {
+          // const pathname = request.nextUrl.pathname;
+          // if (request.nextUrl.pathname.includes("change-email")) {
+          //   return NextResponse.redirect(
+          //     new URL("app/".concat(pathname), request.url)
+          //   );
+          // }
           return true;
         } else {
           const redirectUrl =
@@ -156,10 +206,11 @@ export const config = {
      *  ✅ Stores token with user details
      *
      */
-    jwt: async ({ token, user, trigger }) => {
+    jwt: async ({ token, user, trigger, account }) => {
+      console.log("jwt1: user ", user);
+      console.log("jwt1: account ", account);
       //jwt callback will be called on update() from useSession hook
       if (trigger === "update") {
-        //get User from DB
         const userFromDB = await getUserByEmail(token.email);
         if (userFromDB) {
           user = {
@@ -175,6 +226,7 @@ export const config = {
         token.userId = user.id;
         token.email = user.email!;
       }
+      console.log("jwt2: token ", token);
       return token;
     },
 
@@ -195,6 +247,7 @@ export const config = {
       if (session.user) {
         session.user.id = token.userId;
       }
+      console.log("session: ", session);
       return session;
     },
   },

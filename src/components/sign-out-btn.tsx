@@ -11,7 +11,7 @@ export default function SignOutBtn() {
     <Button
       disabled={isPending}
       onClick={async () => {
-        startTransition(async () => await logOut());
+        startTransition(async () => await logOut("/"));
       }}
       className="rounded-md state-effects mt-20"
     >

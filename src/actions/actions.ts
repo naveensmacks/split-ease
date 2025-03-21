@@ -19,18 +19,26 @@ import {
   editAccountSchema,
   editPasswordSchema,
   resetPasswordSchema,
+  changeEmailSchema,
 } from "@/lib/validation";
-import { ExpenseType, Prisma } from "@prisma/client";
+import { ExpenseType, Prisma, TokenPurpose } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import bcrypt from "bcryptjs";
 import { OptimizedTransaction } from "@/lib/types";
-import { generateVerificationToken, verifyToken } from "@/lib/token";
+import {
+  generateVerificationToken,
+  generateVerificationTokenForEmailChange,
+  verifyToken,
+  verifyTokenForEmailChange,
+} from "@/lib/token";
 import {
   sendPasswordResetEmail,
   sendVerificationEmail,
+  sendVerificationEmailForEmailChange,
 } from "@/lib/email-utils";
+import { redirect } from "next/dist/server/api-utils";
 
 // --- account actions ---
 export async function editPassword(userId: string, formData: unknown) {
@@ -224,7 +232,7 @@ export async function signup(prevState: unknown, formData: unknown) {
             // Check if a token already exists for the user
             const existingToken = await getVerificationTokenByEmail(
               email,
-              true
+              TokenPurpose.REGISTRATION
             );
 
             if (existingToken) {
@@ -242,7 +250,10 @@ export async function signup(prevState: unknown, formData: unknown) {
   const emailExists = await getUserByEmail(email);
   if (emailExists) {
     // Generate a verification token
-    const verificationToken = await generateVerificationToken(email, true);
+    const verificationToken = await generateVerificationToken(
+      email,
+      TokenPurpose.REGISTRATION
+    );
 
     // Send verification email
     await sendVerificationEmail(emailExists, verificationToken.token);
@@ -283,14 +294,17 @@ export async function login(prevState: unknown, formData: unknown) {
           if (user && !user.emailVerified) {
             const existingToken = await getVerificationTokenByEmail(
               email,
-              true
+              TokenPurpose.REGISTRATION
             );
             if (existingToken) {
               const hasExpired = new Date(existingToken.expires) < new Date();
 
               if (hasExpired) {
                 // Generate a new verification token
-                const newToken = await generateVerificationToken(email, true);
+                const newToken = await generateVerificationToken(
+                  email,
+                  TokenPurpose.REGISTRATION
+                );
                 // Send verification email
                 await sendVerificationEmail(user, newToken.token);
                 return {
@@ -306,7 +320,10 @@ export async function login(prevState: unknown, formData: unknown) {
             } else {
               // This happens on db corruption
               // Generate a verification token
-              const newToken = await generateVerificationToken(email, true);
+              const newToken = await generateVerificationToken(
+                email,
+                TokenPurpose.REGISTRATION
+              );
 
               // Send verification email
               await sendVerificationEmail(user, newToken.token);
@@ -331,8 +348,8 @@ export async function login(prevState: unknown, formData: unknown) {
   }
 }
 
-export async function logOut() {
-  await signOut({ redirectTo: "/" });
+export async function logOut(redirectUrl?: string) {
+  await signOut(redirectUrl ? { redirectTo: redirectUrl } : undefined);
 }
 
 //---DB actions
@@ -713,14 +730,18 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
     if (!member) {
       return {
         isSuccess: false,
-        fieldErrors: { email: ["This email is not registered"] },
+        fieldErrors: {
+          email: ["This email is not associated with any account"],
+        },
       };
     }
     //check if user is already a member of the same group
     if (await isMemberOfGroup(newMember.email, groupId)) {
       return {
         isSuccess: false,
-        fieldErrors: { email: ["Already a member of this group"] },
+        fieldErrors: {
+          email: ["This email is already a member of the group"],
+        },
       };
     }
     try {
@@ -802,7 +823,10 @@ export async function addMemberToGroup(member: unknown, groupId: string) {
 }
 
 export const newVerification = async (token: string) => {
-  const existingToken = await getVerificationTokenByToken(token, true);
+  const existingToken = await getVerificationTokenByToken(
+    token,
+    TokenPurpose.REGISTRATION
+  );
   console.log("existingToken: ", existingToken);
   const tokenVerification = await verifyToken(token);
   console.log("tokenVerification: ", tokenVerification);
@@ -821,7 +845,10 @@ export const newVerification = async (token: string) => {
         // this part will hit on tokenVerification.isExpired or DB corruption(tokenVerification.isJwtVerified)
 
         //check if that mail has an exising token valid token, if yes then donot send new email, ask to use the existing one
-        const tokenForEmail = await getVerificationTokenByEmail(email, true);
+        const tokenForEmail = await getVerificationTokenByEmail(
+          email,
+          TokenPurpose.REGISTRATION
+        );
         if (tokenForEmail) {
           const hasExpired = new Date(tokenForEmail.expires) < new Date();
 
@@ -834,7 +861,10 @@ export const newVerification = async (token: string) => {
         }
 
         // Generate a verification token
-        const verificationToken = await generateVerificationToken(email, true);
+        const verificationToken = await generateVerificationToken(
+          email,
+          TokenPurpose.REGISTRATION
+        );
 
         // Send verification email
         await sendVerificationEmail(existingUser, verificationToken.token);
@@ -860,7 +890,10 @@ export const newVerification = async (token: string) => {
     if (hasExpired) {
       const email = tokenVerification.email!;
       // Generate a verification token
-      const verificationToken = await generateVerificationToken(email, true);
+      const verificationToken = await generateVerificationToken(
+        email,
+        TokenPurpose.REGISTRATION
+      );
 
       // Send verification email
       await sendVerificationEmail(existingUser, verificationToken.token);
@@ -900,7 +933,10 @@ export async function forgotPassword(prevState: any, formData: FormData) {
       message: "Email not registered. Please enter a registered email ID.",
     };
   } else {
-    const existingToken = await getVerificationTokenByEmail(email, false);
+    const existingToken = await getVerificationTokenByEmail(
+      email,
+      TokenPurpose.PASSWORD_RESET
+    );
     if (existingToken) {
       const hasExpired = new Date(existingToken.expires) < new Date();
       if (!hasExpired) {
@@ -918,7 +954,10 @@ export async function forgotPassword(prevState: any, formData: FormData) {
   //we are doing jwt verification so any random generation token is enough
   //as we are doing only db record check(if token exist for email)
   //but jwt token just to avoid installing a library for installing a library to generate random token
-  const resetToken = await generateVerificationToken(email, false);
+  const resetToken = await generateVerificationToken(
+    email,
+    TokenPurpose.PASSWORD_RESET
+  );
   await sendPasswordResetEmail(user, resetToken.token);
   return {
     isSuccess: true,
@@ -942,7 +981,7 @@ export async function resetPassword(
 
   const resetToken = await getVerificationTokenByToken(
     resetPasswordToken,
-    false
+    TokenPurpose.PASSWORD_RESET
   );
   if (!resetToken) {
     return {
@@ -984,5 +1023,151 @@ export async function resetPassword(
     isSuccess: true,
     message:
       "Password reset successful. You can now log in with your new password.",
+  };
+}
+
+export async function changeEmailId(userId: string, userDetails: unknown) {
+  //validation
+  const validatedEmailChangeData = changeEmailSchema.safeParse(userDetails);
+  if (!validatedEmailChangeData.success) {
+    return {
+      isSuccess: false,
+      fieldErrors: validatedEmailChangeData.error.flatten().fieldErrors,
+    };
+  }
+  const { email, password } = validatedEmailChangeData.data;
+
+  //getUserById
+  const user = await getUserById(userId);
+  if (!user || !user.hashedPassword) {
+    return {
+      isSuccess: false,
+      message: "User not found",
+    };
+  }
+
+  //check password
+  const passwordsMatch = await bcrypt.compare(
+    password as string,
+    user.hashedPassword
+  );
+  if (!passwordsMatch) {
+    return {
+      isSuccess: false,
+      fieldErrors: { password: ["Invalid password"] },
+    };
+  }
+
+  //check if email already exists
+  if (email.toLowerCase() !== user.email?.toLowerCase()) {
+    const emailExists = await getUserByEmail(email);
+    if (emailExists) {
+      return {
+        isSuccess: false,
+        fieldErrors: { email: ["An account with this email already exists."] },
+      };
+    }
+  } else {
+    return {
+      isSuccess: false,
+      fieldErrors: { email: ["Email cannot be same as current email"] },
+    };
+  }
+
+  if (user.email) {
+    // Generate a verification token
+    const verificationToken = await generateVerificationTokenForEmailChange(
+      user.email,
+      email,
+      TokenPurpose.EMAIL_CHANGE
+    );
+
+    if (!verificationToken.isSuccess) {
+      return verificationToken;
+    } else {
+      // Send verification email
+      await sendVerificationEmailForEmailChange(
+        user,
+        email,
+        verificationToken.token
+      );
+      return {
+        isSuccess: true,
+        message: `A verification link has been sent to ${email}. Please verify it to update your email.`,
+      };
+    }
+  }
+  const groups = await getGroupsByUserId(userId);
+
+  return {
+    isSuccess: true,
+    data: { groups, user },
+  };
+}
+
+export async function verifyEmailChangeToken(token: string) {
+  const existingToken = await getVerificationTokenByToken(
+    token,
+    TokenPurpose.EMAIL_CHANGE
+  );
+  console.log("existingToken: ", existingToken);
+  const tokenVerification = await verifyTokenForEmailChange(token);
+  console.log("tokenVerification: ", tokenVerification);
+
+  if (existingToken) {
+    console.log("email change token Exist in DB");
+    if (tokenVerification.isExpired) {
+      return {
+        isSuccess: false,
+        message:
+          "Token has expired. Please request for a new verification link.",
+      };
+    }
+    if (tokenVerification.isJwtVerified) {
+      const email = tokenVerification.email!;
+      const updatedEmail = tokenVerification.updatedEmail!;
+      const existingUser = await getUserByEmail(email);
+      console.log("existingUser: ", existingUser);
+      if (existingUser) {
+        const newEmailUser = await getUserByEmail(updatedEmail);
+        if (newEmailUser) {
+          return {
+            isSuccess: false,
+            message: `An account with email ${updatedEmail} already exists.`,
+          };
+        } else {
+          await prisma.user.update({
+            where: {
+              userId: existingUser.userId,
+            },
+            data: {
+              email: updatedEmail,
+            },
+          });
+          await prisma.verificationToken.delete({
+            where: {
+              id: existingToken.id,
+            },
+          });
+          return {
+            isSuccess: true,
+            message:
+              "Email change successful. You can now log in with your new email.",
+          };
+        }
+      } else {
+        return {
+          isSuccess: false,
+          message: "User not found. Request for a new verification link.",
+        };
+      }
+    }
+  }
+  console.log("email change token does not exist in DB");
+  return {
+    isSuccess: false,
+    message: tokenVerification.message
+      ? tokenVerification.message
+      : "Invalid token. Request for a new verification link.",
   };
 }
