@@ -29,6 +29,7 @@ export default function AccountDetailsForm() {
       email: user.email || "",
     },
   });
+
   return (
     <form
       className="flex flex-col p-4 rounded-lg bg-white border-b border-black/10 text-black gap-3"
@@ -78,10 +79,18 @@ export default function AccountDetailsForm() {
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="email" className="sm:text-lg">
-          Email
-        </Label>
-        <Input
+        <div className="flex justify-between">
+          <Label htmlFor="email" className="sm:text-lg">
+            Email
+          </Label>
+          <Link
+            href="/app/account/edit/email"
+            className="text-xs sm:text-sm text-primecolor/85"
+          >
+            Change Email
+          </Link>
+        </div>
+        {/* <Input
           className="border-zinc-400 sm:text-lg"
           type="email"
           {...register("email")}
@@ -89,7 +98,14 @@ export default function AccountDetailsForm() {
         />
         {errors.email && (
           <p className="text-red-500/85">{errors.email.message}</p>
-        )}
+        )} */}
+        <Input
+          className="border-zinc-400 sm:text-lg"
+          type="email"
+          {...register("email")}
+          id="email"
+          disabled
+        />
       </div>
       <div className="space-y-1">
         <div className="flex justify-between">
@@ -98,7 +114,7 @@ export default function AccountDetailsForm() {
           </Label>
           <Link
             href="/app/account/edit/password"
-            className="text-xs sm:text-lg text-primecolor/85"
+            className="text-xs sm:text-sm text-primecolor/85"
           >
             Edit Password
           </Link>

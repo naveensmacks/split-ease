@@ -307,3 +307,14 @@ export const resetPasswordSchema = z
   );
 
 export type TResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
+export const changeEmailSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .max(100, { message: "Email can't be longer than 100 characters" })
+    .email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, "Enter password to update account details"),
+});
+
+export type TChangeEmailForm = z.infer<typeof changeEmailSchema>;

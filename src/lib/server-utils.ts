@@ -3,6 +3,7 @@ import prisma from "./db";
 import { sleep } from "./utils";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
+import { TokenPurpose } from "@prisma/client";
 
 export async function checkAuth() {
   //authentication check
@@ -164,13 +165,13 @@ export async function getGroupByGroupId(groupId: string) {
 
 export const getVerificationTokenByEmail = async (
   email: string,
-  isForRegistration: boolean
+  tokenPurpose: TokenPurpose
 ) => {
   try {
     const verificationToken = await prisma.verificationToken.findFirst({
       where: {
         email: email,
-        isForRegistration: isForRegistration,
+        purpose: tokenPurpose,
       },
     });
 
@@ -182,13 +183,13 @@ export const getVerificationTokenByEmail = async (
 
 export const getVerificationTokenByToken = async (
   token: string,
-  isForRegistration: boolean
+  purpose: TokenPurpose
 ) => {
   try {
     const verificationToken = await prisma.verificationToken.findFirst({
       where: {
         token: token,
-        isForRegistration: isForRegistration,
+        purpose: purpose,
       },
     });
 
