@@ -7,11 +7,15 @@ export default function SignOutBtn() {
   //use transition hook needs to be used as we invoking outside the form
   //inside the form we can use useFormStatus
   const [isPending, startTransition] = useTransition();
+
   return (
     <Button
       disabled={isPending}
       onClick={async () => {
-        startTransition(async () => await logOut("/"));
+        startTransition(async () => {
+          await logOut();
+          window.location.href = process.env.NEXT_PUBLIC_LANDING_PAGE_URL!;
+        });
       }}
       className="rounded-md state-effects mt-20"
     >
