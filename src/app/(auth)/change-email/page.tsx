@@ -3,6 +3,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { logOut, verifyEmailChangeToken } from "@/actions/actions";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
@@ -43,7 +45,10 @@ export default function VerifyEmailPage() {
         <>
           <p>{message}</p>
           {isSuccess && (
-            <button onClick={() => router.push("/login")}>Log In</button>
+            <Button className="state-effects mt-4" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+            // <button onClick={() => router.push("/login")}>Log In</button>
           )}
         </>
       )}

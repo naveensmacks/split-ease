@@ -58,6 +58,7 @@ export default function AccountDetailsForm() {
           type="text"
           id="firstName"
           {...register("firstName")}
+          disabled={user.hashedPassword === null}
         />
         {errors.firstName && (
           <p className="text-red-500/85">{errors.firstName.message}</p>
@@ -72,6 +73,7 @@ export default function AccountDetailsForm() {
           type="text"
           {...register("lastName")}
           id="lastName"
+          disabled={user.hashedPassword === null}
         />
         {errors.lastName && (
           <p className="text-red-500/85">{errors.lastName.message}</p>
@@ -83,12 +85,14 @@ export default function AccountDetailsForm() {
           <Label htmlFor="email" className="sm:text-lg">
             Email
           </Label>
-          <Link
-            href="/app/account/edit/email"
-            className="text-xs sm:text-sm text-primecolor/85"
-          >
-            Change Email
-          </Link>
+          {user.hashedPassword !== null && (
+            <Link
+              href="/app/account/edit/email"
+              className="text-xs sm:text-sm text-primecolor/85"
+            >
+              Change Email
+            </Link>
+          )}
         </div>
         {/* <Input
           className="border-zinc-400 sm:text-lg"
@@ -107,29 +111,33 @@ export default function AccountDetailsForm() {
           disabled
         />
       </div>
-      <div className="space-y-1">
-        <div className="flex justify-between">
-          <Label htmlFor="password" className="sm:text-lg">
-            Password
-          </Label>
-          <Link
-            href="/app/account/edit/password"
-            className="text-xs sm:text-sm text-primecolor/85"
-          >
-            Edit Password
-          </Link>
-        </div>
-        <Input
-          className="border-zinc-400 sm:text-lg"
-          type="password"
-          {...register("password")}
-          id="password"
-        />
-        {errors.password && (
-          <p className="text-red-500/85">{errors.password.message}</p>
-        )}
-      </div>
-      <AuthFormBtn>Save</AuthFormBtn>
+      {user.hashedPassword !== null && (
+        <>
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <Label htmlFor="password" className="sm:text-lg">
+                Password
+              </Label>
+              <Link
+                href="/app/account/edit/password"
+                className="text-xs sm:text-sm text-primecolor/85"
+              >
+                Edit Password
+              </Link>
+            </div>
+            <Input
+              className="border-zinc-400 sm:text-lg"
+              type="password"
+              {...register("password")}
+              id="password"
+            />
+            {errors.password && (
+              <p className="text-red-500/85">{errors.password.message}</p>
+            )}
+          </div>
+          <AuthFormBtn>Save</AuthFormBtn>
+        </>
+      )}
     </form>
   );
 }

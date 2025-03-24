@@ -12,7 +12,7 @@ export default async function Layout({
   return (
     <>
       {/* BackgroundPattern for auth pages*/}
-      <div className="fixed bg-primecolor sm:h-28 h-16 w-full top-0 -z-10"></div>
+      <div className="fixed bg-primecolor sm:h-[73px] h-16 w-full top-0 -z-10"></div>
       <Container>
         <div className="flex flex-col min-h-screen">
           <AuthHeader />

@@ -154,8 +154,7 @@ export const config = {
     authorized: ({ auth, request }) => {
       //runs on every request with middleware
       const isLoggedIn = Boolean(auth?.user);
-      const isTryingToAccessApp = request.nextUrl.pathname.includes("app");
-
+      const isTryingToAccessApp = request.nextUrl.pathname.startsWith("/app");
       console.log(
         "pathname : ",
         request.nextUrl.pathname,
@@ -182,11 +181,17 @@ export const config = {
             request.nextUrl.searchParams.get("callbackUrl") || "/app/groups";
           //Note: NExtJs redirect() will throw as an error and handled by NExtJs itself - to redirect the page
           //so if it is caught somewhere by our code, then it needs to be rethrowed so that NExtJs can handle it
-          return NextResponse.redirect(new URL(redirectUrl, request.url));
+          return NextResponse.redirect(
+            new URL(redirectUrl, process.env.NEXTAUTH_URL_INTERNAL)
+          );
         }
       } else {
-        if (isTryingToAccessApp) {
-          return false;
+        if (isTryingToAccessApp || request.nextUrl.pathname === "/") {
+          //return false;
+          // Redirect non-logged-in users trying to access protected app pages
+          return NextResponse.redirect(
+            new URL(process.env.NEXT_PUBLIC_LANDING_PAGE_URL!)
+          );
         } else {
           return true;
         }
@@ -207,8 +212,6 @@ export const config = {
      *
      */
     jwt: async ({ token, user, trigger, account }) => {
-      console.log("jwt1: user ", user);
-      console.log("jwt1: account ", account);
       //jwt callback will be called on update() from useSession hook
       if (trigger === "update") {
         const userFromDB = await getUserByEmail(token.email);
@@ -226,7 +229,6 @@ export const config = {
         token.userId = user.id;
         token.email = user.email!;
       }
-      console.log("jwt2: token ", token);
       return token;
     },
 
