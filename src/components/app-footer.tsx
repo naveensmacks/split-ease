@@ -15,7 +15,7 @@ export default function AppFooter() {
     <>
       <footer className="h-16 border-t border-black/5 p-3 hidden sm:block">
         <small className="opacity-50">
-          &copy; 2049 naveenSmacks. All rights reserved.
+          &copy; 2025 naveenSmacks. All rights reserved.
         </small>
       </footer>
 
