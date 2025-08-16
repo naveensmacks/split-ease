@@ -56,7 +56,7 @@ function EmptyView() {
         href="/app/groups/create"
         className="h-15 max-w-96 p-5 flex items-center justify-center"
       >
-        You don`&apos;`t have any groups. Create one now!
+        You don&apos;t have any groups. Create one now!
       </Link>
     </div>
   );

@@ -95,7 +95,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
   return (
     <>
-      <div className="fixed sm:hidden right-4 bottom-14">
+      <div className="fixed sm:hidden right-6 bottom-14">
         <AddExpenseButton />
       </div>
 

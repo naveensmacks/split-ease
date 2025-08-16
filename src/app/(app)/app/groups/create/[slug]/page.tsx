@@ -10,22 +10,21 @@ type GroupMembersProps = {
   params: { slug: string };
 };
 export default function GroupDetails({ params }: GroupMembersProps) {
-  const slug = params.slug;
   return (
-    <GroupDetailsWrapper groupId={slug}>
+    <GroupDetailsWrapper groupId={params.slug}>
       <NavigationHeader
         backRoute={`/app/groups/create/${params.slug}`}
         editRoute={`/app/group/${params.slug}/edit`}
         useSettingSymbol={true}
       />
-      <GroupInfo />
+      <GroupInfo groupId={params.slug} />
       <MemberList />
       <AddMember />
       <Button
         className="mt-6 state-effects mx-4 sm:mx-auto sm:px-44 mb-4 bg-opacity-85 rounded-md"
         asChild
       >
-        <Link href={`/app/group/${slug}/expenses`}>Add Expenses</Link>
+        <Link href={`/app/group/${params.slug}/expenses`}>Add Expenses</Link>
       </Button>
     </GroupDetailsWrapper>
   );

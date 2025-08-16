@@ -23,9 +23,5 @@ export default function GroupDetailsWrapper({
     handleChangeSelectedGroupId(groupId);
   }, [groupId, handleChangeSelectedGroupId]);
 
-  return (
-    <div className={cn("px-2 flex flex-col justify-between", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn("px-2 flex flex-col", className)}>{children}</div>;
 }
