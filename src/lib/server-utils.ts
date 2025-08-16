@@ -21,7 +21,8 @@ export async function checkAuth() {
 }
 
 export async function getGroupsByUserId(userId: string) {
-  await sleep(2000);
+  //TODO: add this while testing
+  //await sleep(2000);
   const userGroups = await prisma.user.findFirst({
     where: {
       userId: {
@@ -62,6 +63,45 @@ export async function getGroupsByUserId(userId: string) {
     },
   });
   return userGroups?.groups;
+}
+
+export async function getGroupDetailsByGroupId(groupId: string) {
+  const group = await prisma.group.findFirst({
+    where: {
+      groupId: {
+        equals: groupId.toLowerCase(),
+        mode: "insensitive",
+      },
+    },
+    select: {
+      groupId: true,
+      groupName: true,
+      groupDescription: true,
+      totalExpense: true,
+      currencyType: true,
+      splitEase: true,
+      updatedAt: true,
+      createdAt: true,
+      createdByUserId: true,
+      expenses: {
+        include: {
+          paidByUser: true,
+          addedByUser: true,
+          updatedByUser: true,
+          shares: {
+            include: {
+              paidToUser: true,
+            },
+          },
+        },
+      }, // This will fetch all the expenses of the group
+      users: true, // This will fetch the all users of the group
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+  return group!;
 }
 
 export async function getUserByEmail(email: string) {

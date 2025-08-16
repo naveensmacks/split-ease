@@ -10,6 +10,7 @@ type GroupEditProps = {
   params: { slug: string };
 };
 export default function GroupEdit({ params }: GroupEditProps) {
+  console.log("groupId5: ", params.slug);
   return (
     <GroupDetailsWrapper groupId={params.slug}>
       <NavigationHeader
@@ -17,7 +18,7 @@ export default function GroupEdit({ params }: GroupEditProps) {
         editRoute={`/app/groups/create/${params.slug}/edit`}
         useSettingSymbol={true}
       />
-      <GroupInfo />
+      <GroupInfo groupId={params.slug} />
       <MemberList />
       <AddMember />
       <Button

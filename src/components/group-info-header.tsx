@@ -2,8 +2,12 @@ import Image from "next/image";
 import usersIcon from "../../public/users.svg";
 import H1 from "./h1";
 import { useGroupContext } from "@/lib/hooks";
+import Link from "next/link";
 
-export default function GroupInfoHeader() {
+type GroupInfoHeaderParams = {
+  groupId: string;
+};
+export default function GroupInfoHeader({ groupId }: GroupInfoHeaderParams) {
   const { selectedGroup, selectedGroupMemberList } = useGroupContext();
   return (
     <>
@@ -20,7 +24,9 @@ export default function GroupInfoHeader() {
           {selectedGroup?.groupDescription}
         </div>
         <div className="text-white">
-          {selectedGroupMemberList?.length} Members
+          <Link href={`/app/group/${groupId}/edit`}>
+            {selectedGroupMemberList?.length} Members
+          </Link>
         </div>
       </div>
     </>

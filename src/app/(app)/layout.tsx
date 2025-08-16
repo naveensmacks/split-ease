@@ -26,7 +26,7 @@ export default async function Layout({
           <UserContextProvider initialUser={user}>
             <AppHeader />
             <main className="flex flex-grow flex-col">
-              <div className="max-w-[920px] h-full w-full sm:p-3 mx-auto ">
+              <div className="max-w-[920px] flex flex-col flex-grow h-full w-full sm:p-3 sm:pb-1 mx-auto ">
                 <Suspense fallback={<Loading />}>
                   <DBFetchWrapperGroups user={user}>
                     {children}
